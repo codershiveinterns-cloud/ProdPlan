@@ -1,0 +1,471 @@
+// ProdPlan — Milestone 1 data model. See docs/M1_SPEC.md §2 and §4 for the rules behind every field.
+//
+// Tenancy conventions:
+//  * every domain table carries tenantId (FK → Tenant, Cascade) and @@unique([tenantId, id]) when referenced;
+//  * every REQUIRED intra-tenant relation is a composite FK on [tenantId, xId] → [tenantId, id] (DB-level isolation);
+//  * OPTIONAL relations (importBatchId, machineId on operations, actorUserId, defaultCalendarId) are plain FKs —
+//    Prisma rejects composite relations mixing a required and an optional scalar. They are checked in code.
+//  * onDelete: Cascade for owned children, NoAction for master-data references (checked at statement end so a
+//    Tenant cascade still succeeds), SetNull for audit/import back-links.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- enums ----------
+
+enum Role {
+  ADMIN
+  PLANNER
+  SUPERVISOR
+  VIEWER
+}
+
+enum StockMovementType {
+  RECEIPT
+  ISSUE
+  ADJUSTMENT
+  RETURN
+}
+
+enum MachineStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum DowntimeType {
+  MAINTENANCE
+  BREAKDOWN
+  OTHER
+}
+
+enum OrderPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum OrderStatus {
+  QUEUED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ImportBatchStatus {
+  PENDING
+  COMMITTED
+  DISCARDED
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  IMPORT
+  LOGIN
+}
+
+// ---------- platform ----------
+
+model Tenant {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  timezone          String   @default("Asia/Kolkata")
+  orderSeq          Int      @default(0)
+  defaultCalendarId String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  defaultCalendar ShiftCalendar? @relation("TenantDefaultCalendar", fields: [defaultCalendarId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  users              User[]
+  customers          Customer[]
+  products           Product[]
+  productOperations  ProductOperation[]
+  materials          Material[]
+  bomItems           BomItem[]
+  stockMovements     StockMovement[]
+  workCenters        WorkCenter[]
+  calendars          ShiftCalendar[]    @relation("TenantCalendars")
+  shifts             Shift[]
+  calendarExceptions CalendarException[]
+  machines           Machine[]
+  downtimeWindows    DowntimeWindow[]
+  orders             Order[]
+  importBatches      ImportBatch[]
+  auditLogs          AuditLog[]
+}
+
+/// Login/signup rate limiting across serverless instances. Platform-level: no tenantId.
+model RateLimitBucket {
+  key     String   @id
+  count   Int      @default(0)
+  resetAt DateTime
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  tenantId           String
+  email              String    @unique
+  name               String
+  passwordHash       String
+  role               Role
+  isActive           Boolean   @default(true)
+  mustChangePassword Boolean   @default(false)
+  tokenVersion       Int       @default(0)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdOrders         Order[]          @relation("OrderCreatedBy")
+  createdStockMovements StockMovement[]  @relation("StockMovementCreatedBy")
+  createdDowntime       DowntimeWindow[] @relation("DowntimeCreatedBy")
+  createdImportBatches  ImportBatch[]    @relation("ImportBatchCreatedBy")
+  auditEntries          AuditLog[]       @relation("AuditActor")
+
+  @@unique([tenantId, id])
+  @@index([tenantId])
+}
+
+// ---------- master data ----------
+
+model Customer {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  code      String?
+  email     String?
+  phone     String?
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  tenantId    String
+  sku         String
+  name        String
+  description String?
+  unit        String   @default("pcs")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bomItems   BomItem[]
+  operations ProductOperation[]
+  orders     Order[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, sku])
+}
+
+/// Routing step: which work center (optionally which fixed machine) a product passes through, and how long it takes.
+model ProductOperation {
+  id                String   @id @default(cuid())
+  tenantId          String
+  productId         String
+  sequence          Int
+  workCenterId      String
+  machineId         String?
+  setupMinutes      Int      @default(0)
+  runMinutesPerUnit Decimal  @db.Decimal(14, 3)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  workCenter WorkCenter @relation(fields: [tenantId, workCenterId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  machine    Machine?   @relation(fields: [machineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, productId, sequence])
+  @@index([tenantId, workCenterId])
+}
+
+model Material {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  code                String
+  name                String
+  unit                String   @default("pcs")
+  stockOnHand         Decimal  @default(0) @db.Decimal(14, 3)
+  reorderThreshold    Decimal  @default(0) @db.Decimal(14, 3)
+  reorderLeadTimeDays Int      @default(0)
+  unitCost            Decimal? @db.Decimal(14, 2)
+  supplier            String?
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bomItems  BomItem[]
+  movements StockMovement[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+}
+
+model BomItem {
+  id              String   @id @default(cuid())
+  tenantId        String
+  productId       String
+  materialId      String
+  quantityPerUnit Decimal  @db.Decimal(14, 3)
+  scrapPercent    Decimal  @default(0) @db.Decimal(5, 2)
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  material Material @relation(fields: [tenantId, materialId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, productId, materialId])
+  @@index([tenantId, materialId])
+}
+
+/// Append-only stock ledger. quantity is the SIGNED delta applied to Material.stockOnHand.
+model StockMovement {
+  id           String            @id @default(cuid())
+  tenantId     String
+  materialId   String
+  type         StockMovementType
+  quantity     Decimal           @db.Decimal(14, 3)
+  balanceAfter Decimal           @db.Decimal(14, 3)
+  reference    String?
+  note         String?
+  createdById  String
+  createdAt    DateTime          @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  material  Material @relation(fields: [tenantId, materialId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy User     @relation("StockMovementCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenantId, materialId, createdAt])
+}
+
+model WorkCenter {
+  id          String   @id @default(cuid())
+  tenantId    String
+  code        String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  machines   Machine[]
+  operations ProductOperation[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+}
+
+model ShiftCalendar {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant            Tenant              @relation("TenantCalendars", fields: [tenantId], references: [id], onDelete: Cascade)
+  shifts            Shift[]
+  exceptions        CalendarException[]
+  machines          Machine[]
+  defaultForTenants Tenant[]            @relation("TenantDefaultCalendar")
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+}
+
+/// startTime/endTime are "HH:MM" in the tenant timezone; endTime <= startTime means the shift ends the next day.
+/// daysOfWeek are weekdays (0 = Sunday … 6 = Saturday) of the date on which the shift STARTS.
+model Shift {
+  id           String   @id @default(cuid())
+  tenantId     String
+  calendarId   String
+  name         String
+  startTime    String
+  endTime      String
+  daysOfWeek   Int[]
+  breakMinutes Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  calendar ShiftCalendar @relation(fields: [tenantId, calendarId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, calendarId])
+}
+
+model CalendarException {
+  id         String   @id @default(cuid())
+  tenantId   String
+  calendarId String
+  date       DateTime @db.Date
+  isWorking  Boolean
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tenant   Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  calendar ShiftCalendar @relation(fields: [tenantId, calendarId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([tenantId, calendarId, date])
+}
+
+model Machine {
+  id                    String        @id @default(cuid())
+  tenantId              String
+  workCenterId          String
+  calendarId            String
+  code                  String
+  name                  String
+  status                MachineStatus @default(ACTIVE)
+  efficiencyPercent     Int           @default(100)
+  ratedCapacityPerShift Decimal?      @db.Decimal(14, 3)
+  capacityUnit          String?
+  notes                 String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workCenter WorkCenter         @relation(fields: [tenantId, workCenterId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  calendar   ShiftCalendar      @relation(fields: [tenantId, calendarId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  downtime   DowntimeWindow[]
+  operations ProductOperation[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@index([tenantId, workCenterId])
+}
+
+model DowntimeWindow {
+  id          String       @id @default(cuid())
+  tenantId    String
+  machineId   String
+  startsAt    DateTime
+  endsAt      DateTime
+  type        DowntimeType
+  reason      String?
+  createdById String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  machine   Machine @relation(fields: [tenantId, machineId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy User    @relation("DowntimeCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([tenantId, machineId, startsAt])
+}
+
+// ---------- orders ----------
+
+model Order {
+  id                String        @id @default(cuid())
+  tenantId          String
+  orderNumber       String
+  customerId        String
+  productId         String
+  quantity          Decimal       @db.Decimal(14, 3)
+  priority          OrderPriority @default(NORMAL)
+  dueDate           DateTime      @db.Date
+  earliestStartDate DateTime?     @db.Date
+  status            OrderStatus   @default(QUEUED)
+  completedAt       DateTime?
+  customerPoRef     String?
+  notes             String?
+  importBatchId     String?
+  createdById       String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer    Customer     @relation(fields: [tenantId, customerId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  product     Product      @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  createdBy   User         @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId, dueDate])
+  @@index([tenantId, status])
+  @@index([tenantId, customerId])
+  @@index([tenantId, productId])
+}
+
+/// CSV import: preview rows are stored here (status PENDING) and committed by id, so the client never posts row data.
+model ImportBatch {
+  id            String            @id @default(cuid())
+  tenantId      String
+  fileName      String
+  status        ImportBatchStatus @default(PENDING)
+  rows          Json?
+  rowCount      Int               @default(0)
+  validCount    Int               @default(0)
+  errorCount    Int               @default(0)
+  importedCount Int               @default(0)
+  createdById   String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("ImportBatchCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders    Order[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt])
+}
+
+// ---------- audit ----------
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  tenantId      String
+  actorUserId   String?
+  actorEmail    String?
+  actorName     String?
+  ip            String?
+  userAgent     String?
+  entityType    String
+  entityId      String
+  entityLabel   String?
+  action        AuditAction
+  summary       String
+  changedFields String[]
+  before        Json?
+  after         Json?
+  createdAt     DateTime    @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  actor  User?  @relation("AuditActor", fields: [actorUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entityType, entityId])
+}

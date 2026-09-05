@@ -27,7 +27,7 @@ DEPLOYMENT.md / HANDOVER_M1.md. Do not guess beyond them.
 - Provisioned automatically for the site once `@netlify/database` was a dependency and a deploy ran.
 - API `GET /sites/{id}/database/branch/production` returns only a READ-ONLY connection string
   (`netlifydb_readonly@ep-round-hill-a56z3uhs.us-east-2.db.netlify.com/netlifydb?sslmode=require`).
-  Writable access is only available to the deployed app's functions via the injected `NETLIFY_DATABASE_URL`
+  Writable access is only available to the deployed app's functions via the injected `NETLIFY_DB_URL`
   env var (verify at runtime with /api/health), and via deploy-time migrations.
 - Migrations: Netlify applies SQL files in the configured migrations directory at deploy time; `netlify.toml`
   sets `[db.migrations] path = "prisma/migrations"` so Prisma's `<timestamp>_<name>/migration.sql` folders are
@@ -36,6 +36,8 @@ DEPLOYMENT.md / HANDOVER_M1.md. Do not guess beyond them.
 - Seeding staging: there is no external write access, so demo data must be loaded through the app itself
   (Admin → "Load demo data" action / protected setup route), not via `prisma db seed`.
 - The CLI's `netlify database init --yes` scaffolds a Drizzle "planets" starter — do not run it.
+- Free credit plan: the database sleeps after 5 min idle (cold start on the first demo request) and has a
+  48-compute-unit-per-period cap — warm it up before a client review.
 
 ## Local
 - Postgres 15 via `scripts/db-local.sh start` (project-owned data dir `.pgdata`, port 5433, needs LC_ALL — handled by the script).

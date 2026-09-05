@@ -29,8 +29,8 @@ server actions, audit logging of order/master-data changes, fast pages, and an a
 | Concern | Choice |
 |---|---|
 | Framework | Next.js 16 (App Router, `src/` dir, TypeScript strict, Turbopack), React 19, Server Components + Server Actions. |
-| UI | Tailwind CSS v4 + shadcn/ui (Radix) + `lucide-react` + `sonner`. |
-| Database | PostgreSQL 15 locally (`scripts/db-local.sh`, port 5433). Netlify Database (Neon-backed Postgres) on staging. |
+| UI | Tailwind CSS v4 + shadcn/ui 4.x with the Radix base (`init -y -b radix -p nova`; components import from `radix-ui`, `cn` from `@/lib/utils`) + `lucide-react` + `sonner`. Use the `field` component pattern for forms (`form` is a no-op in this registry). |
+| Database | PostgreSQL 15 locally (`scripts/db-local.sh`, port 5433). Netlify Database (GA product, Neon-compatible Postgres; runtime env `NETLIFY_DB_URL`) on staging. |
 | ORM | Prisma 7 (`prisma`, `@prisma/client`, `@prisma/adapter-pg`, `pg`). Generator `prisma-client` → `src/generated/prisma`; `prisma.config.ts`; migrations committed in `prisma/migrations`. |
 | Auth | Custom email/password: `bcryptjs` (cost 12) + `jose` HS256 JWT in an httpOnly cookie. |
 | Validation | `zod` v4 for every form, action and import row. |
@@ -40,7 +40,7 @@ server actions, audit logging of order/master-data changes, fast pages, and an a
 | Hosting | Netlify (`@netlify/plugin-nextjs`, `netlify.toml` committed) with Netlify Database; `Dockerfile` + `docker-compose.yml` for the VPS path. |
 | Package manager | npm (lockfile committed). |
 
-Env vars: `DATABASE_URL` (falls back to `NETLIFY_DATABASE_URL`), `TEST_DATABASE_URL`, `AUTH_SECRET` (≥ 32 chars; fail
+Env vars: `DATABASE_URL` (falls back to `NETLIFY_DB_URL`), `TEST_DATABASE_URL`, `AUTH_SECRET` (≥ 32 chars; fail
 fast at startup if shorter), `APP_URL`, optional `SEED_ALLOW=1`. `.env.example` documents them; `.env` is git-ignored.
 
 Next.js 16 rules: `params`, `searchParams`, `cookies()`, `headers()` are async. Request interception file is
@@ -74,10 +74,13 @@ never set cookies (only Server Actions and Route Handlers do). `next.config.ts` 
      `deleteMany`, `upsert`, `createMany*` throw.
   5. Append-only models: `AuditLog`, `StockMovement` throw on `update*`, `delete*`, `upsert`. `ImportBatch` allows
      `update` of `status`/counts/`rows` only. `User.delete/deleteMany` throw (deactivate only).
-  6. Raw escape hatches: the `client` component overrides `$queryRaw`, `$queryRawUnsafe`, `$executeRaw`,
-     `$executeRawUnsafe` to throw `TenantScopeError`.
+  6. Raw escape hatches (`$queryRaw*`, `$executeRaw*`) are client-level and CANNOT be intercepted by model
+     extensions (verified); they are forbidden outside `prisma/` and `tests/` by ESLint `no-restricted-syntax` +
+     a unit test that greps `src/`.
   7. Transactions: module code calls `db.$transaction(async tx => …)` on the SCOPED client only; the `tx` client stays
      scoped (integration-tested). `audit()`, `nextOrderNumbers()`, `applyStockMovement()` accept the scoped `tx`.
+  TypeScript requires `tenantId` in scalar-FK `create` inputs even though the extension injects it: callers pass
+  `session.tenant.id` (the extension overwrites it with the scope value anyway).
   Module code obtains its client from `requirePermission()`/`getTenantDb()` and never imports the raw `prisma`
   (ESLint-enforced, see §8). Allowed raw users: `src/lib/db.ts`, `src/lib/auth/**`, `src/lib/rate-limit.ts`,
   `src/app/api/health/route.ts`, `prisma/seed.ts`, `tests/**`.
