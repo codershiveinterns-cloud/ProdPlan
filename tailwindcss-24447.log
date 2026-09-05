@@ -1,0 +1,49 @@
+2026-09-05T12:03:50.243884Z  INFO tailwindcss_oxide::scanner: Provided sources:
+2026-09-05T12:03:50.244158Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "/Users/gauravcodershive/Desktop/prodplan", pattern: "**/*", negated: false }
+2026-09-05T12:03:50.245069Z  INFO tailwindcss_oxide::scanner: Optimized sources:
+2026-09-05T12:03:50.245080Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "/Users/gauravcodershive/Desktop/prodplan" }
+2026-09-05T12:03:50.245860Z  INFO discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.245885Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.247172Z  INFO discover_sources:walk_synchronous: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.247593Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/postcss.config.mjs"
+2026-09-05T12:03:50.247718Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/public/next.svg"
+2026-09-05T12:03:50.247730Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/public/vercel.svg"
+2026-09-05T12:03:50.247733Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/public/window.svg"
+2026-09-05T12:03:50.247736Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/public/globe.svg"
+2026-09-05T12:03:50.247747Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/next.config.ts"
+2026-09-05T12:03:50.247776Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/README.md"
+2026-09-05T12:03:50.247848Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/docs/PRD.txt"
+2026-09-05T12:03:50.247866Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/package.json"
+2026-09-05T12:03:50.247885Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/eslint.config.mjs"
+2026-09-05T12:03:50.247774Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/docs/M1_SPEC.md"
+2026-09-05T12:03:50.247876Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/src/app/layout.tsx"
+2026-09-05T12:03:50.247772Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/public/file.svg"
+2026-09-05T12:03:50.247877Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/src/app/page.tsx"
+2026-09-05T12:03:50.247786Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/netlify.toml"
+2026-09-05T12:03:50.247905Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/tsconfig.json"
+2026-09-05T12:03:50.247907Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/scripts/db-local.sh"
+2026-09-05T12:03:50.247950Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/CLAUDE.md"
+2026-09-05T12:03:50.247989Z  INFO tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/AGENTS.md"
+2026-09-05T12:03:50.248061Z  INFO discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248066Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248070Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248073Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248393Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248400Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248403Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248406Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 1 file(s)
+2026-09-05T12:03:50.248428Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading "/Users/gauravcodershive/Desktop/prodplan/src/app/globals.css"
+2026-09-05T12:03:50.248438Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248440Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248442Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248515Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248520Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248617Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248833Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248837Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248839Z  INFO get_files:discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248922Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.248955Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248958Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: enter
+2026-09-05T12:03:50.248961Z  INFO get_globs:discover_sources: tailwindcss_oxide::scanner: exit
+2026-09-05T12:03:50.263832Z  INFO get_globs: tailwindcss_oxide::scanner: exit

@@ -1,0 +1,16 @@
+# Netlify staging configuration for ProdPlan
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--include=dev"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Netlify Database: apply Prisma's SQL migrations automatically on deploy.
+# (Prisma migration folders are named <timestamp>_<name>/migration.sql, which matches Netlify's format.)
+[db.migrations]
+  path = "prisma/migrations"
