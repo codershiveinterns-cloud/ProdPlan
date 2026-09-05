@@ -1,0 +1,41 @@
+# Local/VPS stack: PostgreSQL 15 + ProdPlan. Copy .env.example to .env.docker and set AUTH_SECRET/APP_URL first.
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: prodplan
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-prodplan}
+      POSTGRES_DB: prodplan
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # put this volume on an encrypted disk in production (PRD: encryption at rest)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prodplan -d prodplan"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  migrate:
+    build: .
+    command: ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
+    environment:
+      DATABASE_URL: postgresql://prodplan:${POSTGRES_PASSWORD:-prodplan}@db:5432/prodplan
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgresql://prodplan:${POSTGRES_PASSWORD:-prodplan}@db:5432/prodplan
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET (>= 32 random chars)}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,8 @@
+node_modules
+.next
+.pgdata
+.netlify
+.env
+.env.*
+coverage
+docs/*.pdf
