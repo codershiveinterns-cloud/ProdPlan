@@ -1,0 +1,126 @@
+ProdPlan — Product Requirements Document Confidential
+ProdPlan
+Manufacturing Production Planning SaaS — PRD
+Prepared For:  Client
+Budget:  USD 7,500
+Duration:  10 Days
+Payment Structure:  3 Fixed-Price Milestones (USD 2,500 each)
+Project Overview
+ProdPlan is a multi-tenant SaaS platform that helps discrete manufacturers plan and track production against real 
+constraints — customer orders, machine/work-center capacity, raw-material availability, and delivery deadlines. It 
+replaces spreadsheet-based production planning with a single live production schedule: planners create orders, the 
+system checks material and capacity availability, builds a day-by-day machine schedule, and gives floor supervisors 
+and managers real-time visibility into production status against every delivery deadline.
+Objectives
+• Replace spreadsheet/whiteboard production planning with a single, live scheduling system.
+• Automatically check machine capacity and material availability before confirming an order into the schedule.
+• Give planners a visual, day-by-day machine schedule that highlights conflicts and overloads.
+• Give managers real-time visibility into production status against every delivery deadline.
+• Support multiple manufacturing units (tenants) on one platform, each with isolated data and configuration.
+• Flag material shortages and at-risk delivery dates automatically, instead of relying on manual follow-up.
+User Roles
+Admin (plant/company owner — full configuration access), Production Planner (creates orders, builds and adjusts the 
+schedule), Floor Supervisor (updates production status, views assigned schedule), and Viewer (read-only access to 
+dashboards and reports).
+Functional Requirements
+• User login and signup (email/password authentication) with role-based access control.
+• Multi-tenant setup so each manufacturing unit's orders, machines, materials, and schedules are fully isolated.
+• Order management: create/import customer orders with product, quantity, priority, and delivery deadline.
+• Machine & work-center master data: capacity per shift, working calendar, downtime/maintenance blocking.
+• Material master & inventory: stock on hand, unit of measure, reorder threshold, per-product bill of materials 
+(BOM).
+• Production scheduling engine: sequences orders across machines based on capacity, material availability, and 
+deadline priority, and flags conflicts (overloaded machine, insufficient material, missed-deadline risk).
+• Visual schedule / planning board: day-by-day, machine-by-machine view (Gantt-style) with drag-to-reschedule.
+Page 1 of 4
+ProdPlan — Product Requirements Document Confidential
+• Production status tracking: stage-wise status per order (queued, in-progress, on-hold, completed) with floor-level 
+update capability.
+• Delivery deadline tracking with automatic at-risk / delayed flags visible on the dashboard.
+• Admin analytics dashboard: machine utilization, on-time delivery rate, material shortages, order throughput.
+• In-app and email notifications for schedule conflicts, material shortages, and approaching deadlines.
+• Schedule and production report export (CSV/PDF).
+• Responsive web UI for both office planning use and floor-level (tablet) status updates.
+Non-Functional Requirements
+• Encryption in transit and at rest.
+• Per-tenant data isolation.
+• Role-enforced API access.
+• Full audit logging of schedule and order changes.
+• Sub-2-second page loads for planning board and dashboards.
+• Architecture that scales from a single pilot plant to multiple manufacturing units.
+• 99.5%+ target uptime.
+AI & Automation
+• AI-assisted schedule optimization: given open orders, machine capacity, and material stock, suggests a conflict-
+minimized production sequence rather than requiring the planner to sequence manually.
+• Material shortage prediction: cross-checks BOM requirements for scheduled orders against current stock and 
+reorder lead time, and proactively flags orders at risk before they hit the floor.
+• Delivery-risk detection: continuously re-evaluates the schedule as status updates come in and surfaces orders likely 
+to miss their deadline, with the contributing reason (capacity, material, or delay upstream).
+• Scheduled notification engine for conflicts, shortages, and at-risk deadlines — email and in-app.
+Payment Integration
+Not required for this engagement — ProdPlan is an internal operations tool, not a payments product. If a future phase 
+adds paid subscription billing for manufacturing units, the architecture should not need to be redesigned to add it.
+Project Budget
+Total Project Budget:  USD 7,500
+Divided evenly across three milestones: Milestone 1 — USD 2,500, Milestone 2 — USD 2,500, Milestone 3 — USD 
+2,500.
+Project Milestones
+As senior full-stack engineer on this engagement, I have scoped the ten-day build into three milestones, each releasing 
+USD 2,500 on completion:
+Page 2 of 4
+ProdPlan — Product Requirements Document Confidential
+Milestone 1 USD 2,500
+• Multi-tenant architecture setup with per-tenant data isolation.
+• Authentication, signup/login, and role-based access control (Admin, Planner, Supervisor, Viewer).
+• Order management module: create, edit, and import customer orders (product, quantity, priority, delivery 
+deadline).
+• Machine & work-center master data: capacity, shift calendar, downtime/maintenance windows.
+• Material master & inventory module with per-product bill of materials (BOM).
+• Base admin dashboard with order and machine list views.
+• Staging deployment for early client review.
+Milestone 2 USD 2,500
+• Production scheduling engine: sequences orders against machine capacity and material availability, factoring in 
+deadline priority.
+• Conflict detection: flags overloaded machines, insufficient material, and at-risk deadlines at scheduling time.
+• Visual planning board (Gantt-style, day-by-day, machine-by-machine) with drag-to-reschedule.
+• Production status tracking: stage-wise status per order (queued, in-progress, on-hold, completed) with floor-
+level update flow.
+• Delivery deadline tracking with automatic at-risk / delayed flags.
+• In-app notification framework wired to scheduling conflicts and status changes.
+Milestone 3 USD 2,500
+• AI-assisted schedule optimization: conflict-minimized sequencing suggestions across open orders.
+• AI material shortage prediction against BOM requirements and stock levels for the live schedule.
+• Delivery-risk detection surfaced on the dashboard with contributing reason (capacity, material, or upstream 
+delay).
+• Manager analytics dashboard: machine utilization, on-time delivery rate, material shortages, order throughput.
+• Email notification engine, schedule/production report export (CSV/PDF), audit logging.
+• Security hardening, responsive UI pass (office + floor/tablet use), and production deployment.
+• Full deployment & go-live: domain connection, hosting setup, SSL, production database, and final cutover (see 
+Deployment & Go-Live section).
+Timeline
+Estimated project duration: 10 days depending on feedback and revision cycles. Delivery may extend if additional 
+features are requested mid-project.
+Page 3 of 4
+ProdPlan — Product Requirements Document Confidential
+Acceptance Criteria
+All modules listed under each milestone are complete, responsive, tested, deployed to production, and delivered with 
+source code, environment setup instructions, and a short handover/knowledge-transfer session.
+Deployment & Go-Live
+The following deployment tasks are included as part of Milestone 3 and completed before final handover:
+• Domain connection: pointing the client's domain/subdomain to the production environment and configuring DNS 
+records (A/CNAME).
+• Hosting setup: provisioning and configuring the production hosting environment (e.g., Hostinger/VPS or equivalent 
+cloud host).
+• SSL certificate installation for secure (HTTPS) access.
+• Production database setup, connection security, and backup configuration.
+• Environment variables and secrets configured for the live environment (separate from staging).
+• Final smoke testing on the live domain across all core workflows.
+• Go-live cutover and post-deployment verification.
+Future Scope
+• Native mobile apps (iOS/Android) for floor supervisors.
+• Machine IoT/sensor integration for automatic status and downtime capture.
+• ERP integration (e.g., Tally, SAP, Zoho) for order and inventory sync.
+• Multi-plant, multi-site scheduling with cross-site capacity balancing.
+• What-if scenario planning (simulate schedule impact of a new rush order).
+• Subscription/billing management for the SaaS itself.
+Page 4 of 4
