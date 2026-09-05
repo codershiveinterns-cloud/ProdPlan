@@ -47,3 +47,6 @@ next-env.d.ts
 .netlify/
 src/generated/
 coverage/
+
+# keep the example env file in git
+!.env.example
