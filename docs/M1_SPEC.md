@@ -155,7 +155,7 @@ Implementation (authoritative details in STACK_NOTES for APIs):
 * `src/proxy.ts`: (a) redirect to `/login?next=` when no cookie or signature/exp verification fails; (b) redirect
   `/login` and `/signup` → `/dashboard` when the cookie verifies; (c) pass `/logout`, `/api/health`, `/_next/**`,
   static assets untouched; (d) pre-filter `/settings/users` and `/settings/tenant` to `role === "ADMIN"` using the
-  JWT hint. Never touches the DB (edge runtime, `jose` only — no `bcryptjs`, no Prisma).
+  JWT hint. Node.js runtime (the only runtime Next 16 allows for proxy); never touches the DB — `jose` only, no `bcryptjs`, no Prisma. Matcher excludes `/api/**`, `_next/static`, `_next/image`, favicon and static asset extensions (see STACK_NOTES §3 skeleton).
 * `safeNext(next)` (`guards.ts`, unit-tested): honour `next` only if it is a string starting with a single `/`, second
   char not `/` or `\`, no `\`, no scheme (`/^[a-z][a-z0-9+.-]*:/i`), length ≤ 512, and not starting with `/logout`,
   `/login`, `/signup`; otherwise `/dashboard`.
