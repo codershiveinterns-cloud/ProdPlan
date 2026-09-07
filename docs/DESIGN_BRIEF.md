@@ -91,8 +91,9 @@ whiteboard and the spreadsheet, and it is honest about what it does today (M1) a
 * Numbers, units and dates everywhere: `250 pcs`, `78.120 kg`, `05 Sep 2026`, `Overdue 3d`.
 * Plant vocabulary, matching the app's labels exactly: order, work center, machine, shift calendar, downtime,
   material, BOM, stock on hand, reorder threshold, planner, supervisor.
-* Honest scope: never claim scheduling, notifications, analytics or AI as present features. Roadmap items are
-  always labelled "Coming next" / "Planned".
+* Production framing: ProdPlan is a complete, shipping product. Describe only capabilities that exist today, and
+  never use the words milestone, prototype, beta, MVP, roadmap, "coming next", planned or phase anywhere a client or
+  user can see (landing, app UI, client documents).
 * No fake proof: no customer counts, logos, testimonials, ratings or uptime numbers until they are real.
 * Sentence case for headings and buttons ("Create your workspace"), no exclamation marks, no emoji.
 * British/Indian-neutral English with US spelling of product terms where the app uses them ("work center").
@@ -372,22 +373,10 @@ screen before the next shift." Buttons: **Create your workspace** · **Sign in**
 
 ---
 
-## 7. "Coming next" roadmap wording
+## 7. Roadmap wording — VOID
 
-Section eyebrow: `Coming next`. Never dated; never in the hero; always past the six M1 features.
-
-* **The planning board** — "A day-by-day, machine-by-machine schedule built from the same orders, calendars and stock
-  you set up today. Overloaded machines, short materials and at-risk delivery dates are flagged before they reach
-  the floor, and supervisors' status updates feed straight back into the plan."
-* **Assistance from AI** — "Suggested sequences that minimise conflicts, shortage prediction against BOM
-  requirements and reorder lead times, and delivery-risk detection with the reason attached. Always a suggestion;
-  the planner decides."
-* Card footnote: "Both build on the M1 data model: no re-entry of orders or master data."
-
-Rules: use "planned" / "coming next", never "AI-powered" for shipped features; no screenshots of unbuilt screens —
-a simple line-drawn placeholder (three horizontal bars on a 7-day grid, amber marker) is acceptable.
-
----
+Superseded on 2026-09-07 by the client's production-framing instruction (see `LANDING_REFERENCE.md`): do not
+mention roadmap, milestones, or future features anywhere user-facing. Present the shipped capabilities only.
 
 ## 8. Imagery strategy and mockup compositions
 

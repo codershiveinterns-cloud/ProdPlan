@@ -4,11 +4,16 @@ The client asked for the ProdPlan landing page to match the **structure, motion 
 product's site, **IntakeIQ** (https://intake-iq-rust.vercel.app/), while using a **clearly different theme** that
 still looks professional. This document records what was observed on that site (inspected in a browser at 1440 px
 and 375 px on 2026-09-07) and how each piece maps to ProdPlan. It overrides `DESIGN_BRIEF.md` §6–§8 for the landing
-page; `DESIGN_BRIEF.md` §3 palette is superseded by the **v2 teal/amber/stone theme** in §4 below (which the app
+page (and its §7 roadmap wording is void); `DESIGN_BRIEF.md` §3 palette is superseded by the **v2 teal/amber/stone theme** in §4 below (which the app
 also adopts).
 
 Rule of thumb: copy the *anatomy* (section order, rhythm, motion, responsive behaviour, density), never the *skin*
 (colours, texture, wording, mock content). No fake customers, ratings, testimonials or prices.
+
+**Production framing (client instruction, 2026-09-07):** ProdPlan is presented everywhere as a complete, shipping
+product. Never show the words *milestone*, *prototype*, *beta*, *MVP*, *roadmap*, *coming next*, *planned*,
+*phase* or version labels on any user-facing surface (landing page, app UI, emails, docs the client receives).
+Describe only capabilities that exist in the product today, and describe them confidently.
 
 ---
 
@@ -64,7 +69,7 @@ back-to-top button stays bottom-right at 44 px.
 
 | # | ProdPlan section | Content |
 |---|---|---|
-| 0 | Header | Logo mark + "ProdPlan" + tagline "Production planning"; nav: **Product ▾** (Orders & import, Capacity & calendars, Materials & BOM, Dashboard), **Roles**, **Security**, **Roadmap**, **FAQ**; right: "Sign in" (ghost, `/login`) + "Create your workspace →" (primary, `/signup`). When a valid session cookie exists show "Open dashboard →" instead. |
+| 0 | Header | Logo mark + "ProdPlan" + tagline "Production planning"; nav: **Product ▾** (Orders & import, Capacity & calendars, Materials & BOM, Dashboard), **Roles**, **Platform**, **Security**, **FAQ**; right: "Sign in" (ghost, `/login`) + "Create your workspace →" (primary, `/signup`). When a valid session cookie exists show "Open dashboard →" instead. |
 | 1 | Hero | Pill: "Built for discrete manufacturing plants" (pulsing dot). H1 (2 lines): "Plan production against **real capacity**, not a whiteboard." — highlight in primary teal. Lead: brief §6 subhead (≤ 30 words). Trust line: "Multi-tenant · Role-based access · Full audit trail" (no stars, no counts). CTAs: "Create your workspace" (primary) + "▶ See how it works" (→ `#how-it-works`). Bullets: "Set up in an afternoon", "Per-plant data isolation", "Works on floor tablets". Mockup: browser chrome + **ProdPlan dashboard**: 4 KPI tiles (Open orders 24 · Overdue 3 (amber) · Due in 7 days 8 · Materials below reorder 3), "Orders by due date" table with 4 rows (SO-000118 · Vikram Auto · HB-200 · 250 pcs · Due in 2d · IN_PROGRESS, …) using the app's badge colours, a "Machines" strip (CNC-01 ACTIVE · CNC-02 Down · maintenance until 12:00), plus a floating chip "RM-AL6061-BAR · Below reorder · 38.5 kg on hand" that slides in with delay. |
 | 2 | Strip | Label "Built for plants like yours"; six industry tags with line icons: Precision machining · Sheet-metal fabrication · Assembly lines · Automotive tier-2 · Electronics · Furniture & fixtures (monochrome, colour on hover). |
 | 3 | Features `#features` | Pill "Everything in one workspace"; H2 "From order intake to shop-floor capacity"; tabs: **Orders**, **Capacity**, **Materials & BOM**, **Dashboard**, **Access & audit**. Each: mockup card (orders table with filters · machine 7-day capacity table with downtime · BOM editor with "Buildable from stock" · dashboard tiles · users table with role badges) + copy from `DESIGN_BRIEF.md` §6 feature blocks, three bold-lead bullets, one honest stat callout (e.g. "3 dp · exact quantities in the material ledger", "44 px · every control sized for gloves and tablets"), link "See it in the app →" (`/signup`). |
@@ -72,8 +77,8 @@ back-to-top button stays bottom-right at 44 px.
 | 4 | Roles `#roles` | Pill "Built for every role"; H2; 4 cards: Admin, Planner, Supervisor, Viewer — label pill, H3, one paragraph, three ✓ bullets (what they can do), link "Create your workspace →". |
 | 5 | Security `#security` | Pill "Security & trust"; H2 "Built like the record of truth it is"; 6 cards: Encryption in transit & at rest · Per-plant data isolation (composite tenant keys + scoped queries) · Role-enforced actions · Immutable audit log · Hardened sessions (`__Host-` cookies, revocation) · Rate-limited sign-in. |
 | 6 | Principle band | Dark band; instead of a testimonial: the brand principle in large type — "**Calm control of the plant.** One record for the office and the floor: orders with deadlines, machines with real shift capacity, materials with real stock." — attributed "ProdPlan design principle", with three small facts chips (No spreadsheets · No double entry · Every change logged). |
-| 7 | Roadmap `#roadmap` | Pill "Roadmap"; H2 "What you get today, and what is coming"; 3 cards: **Milestone 1 — Available now** (highlighted like "MOST POPULAR": orders & CSV import, customers, products/BOM/routing, materials & stock ledger, work centers/machines/calendars/downtime, dashboard, roles & audit), **Milestone 2 — Coming next** (scheduling engine, conflict detection, drag-to-reschedule planning board, stage-wise status tracking, delivery-risk flags, in-app notifications), **Milestone 3 — Planned** (AI schedule optimisation, shortage prediction, analytics dashboard, email notifications, CSV/PDF export, production go-live). No prices, no toggle. |
-| 8 | FAQ `#faq` | Pill "FAQ"; H2; six `details/summary` items from `DESIGN_BRIEF.md` §6 (import format, capacity definition, roles, isolation, tablets, roadmap). |
+| 7 | Platform `#platform` | Pill "One platform"; H2 "Everything the plant needs, in one system"; 3 cards, middle one highlighted like the reference's featured card: **Planning office** (customer orders, CSV import, customers, products with BOM and routing, order numbering and audit history), **Shop floor** (work centers, machines, shift calendars, downtime windows, stock movements and status updates on tablets), **Management** (live dashboard, four roles with enforced permissions, complete audit trail, per-plant isolation for multi-unit groups). Each card: label pill, H3, short paragraph, ✓ list, CTA link. No prices, no toggle, no version labels. |
+| 8 | FAQ `#faq` | Pill "FAQ"; H2; six `details/summary` items: how to import existing orders (CSV template), how capacity per shift is calculated, what each role can do, how plant data is isolated, whether it works on floor tablets, how to get started (sign up, load demo data, invite the team). |
 | 9 | Final CTA | Dark band; pill "Start planning today"; H2 "Ready to replace the whiteboard?"; paragraph; "Create your workspace" + "Sign in" (outline on dark); three ✓ items (Free to set up · Load demo data in one click · Runs on any device). |
 | 10 | Footer | No newsletter. Brand column (logo, one-liner), Product (anchors), Company (Roadmap, Security, FAQ), Account (Sign in, Create workspace); copyright "© 2026 ProdPlan". |
 | — | Back-to-top | Same behaviour. |
@@ -140,5 +145,5 @@ hard-coded `indigo-` classes and replace with token classes.
 - [ ] Hero entry animation + scroll reveals + hover lifts + sticky header + tabs + mobile nav + back-to-top.
 - [ ] 375 / 768 / 1024 / 1440 px screenshots: no overflow, readable type, full-width CTAs on mobile.
 - [ ] Lighthouse-friendly: no layout shift, no external assets, semantic headings h1→h2→h3, `prefers-reduced-motion`.
-- [ ] Copy is honest (M1 today, M2/M3 as roadmap); no fake logos/ratings/testimonials/prices.
+- [ ] Copy describes only shipped capabilities; no milestone/roadmap/prototype/beta/version wording anywhere; no fake logos/ratings/testimonials/prices.
 - [ ] Theme v2 applied on landing **and** app; contrast ≥ 4.5:1 for text.
