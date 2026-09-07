@@ -480,6 +480,40 @@ list has `?q=`); the topbar "+ New" menu covers quick actions.
 * Tenant (ADMIN): name, timezone (searchable Select), default calendar (Select). Users (ADMIN): per §3. Profile (all):
   name, change password (current + new, per policy; clears `mustChangePassword`), "Sign out everywhere".
 
+
+### 6.9 Demo access (one-click, no sign-up)
+
+Visitors must be able to explore ProdPlan without creating an account, the way the sister product does.
+
+* **Demo plant.** A shared tenant with slug `demo` named "Acme Precision Works" (the §7 `acme` dataset), plus four
+  demo users `admin@demo.prodplan.app`, `planner@…`, `supervisor@…`, `viewer@…` with random unguessable passwords
+  (`mustChangePassword=false`). `ensureDemoPlant()` (`src/lib/demo/demo-plant.ts`, raw prisma allowed — it lives
+  beside the auth layer) creates and seeds it on first use if it is missing, so staging never needs the seed script.
+* **Daily reset.** `resetDemoPlantIfStale(maxAgeHours = 24)` deletes the tenant (cascade) and recreates + reseeds it
+  when `Tenant.createdAt` is older than the threshold; it is called at the start of every demo login (opportunistic,
+  no scheduler) and is also exposed as `POST /api/demo/reset` guarded by `DEMO_RESET_TOKEN` (header
+  `x-demo-reset-token`) for manual resets. Sessions of visitors who were inside the old copy become `revoked` and
+  land on `/login?reason=demo-reset` ("The demo plant was refreshed. Pick a profile to continue.").
+* **One-click profiles.** Server action `demoLoginAction(role: Role)` (`src/app/(auth)/actions.ts`): rate-limited
+  (`demo:ip:<ip>` 30 / 60 min), ensures/reset-checks the demo plant, looks up the demo user for that role, writes a
+  LOGIN audit row with summary "Demo sign-in (<role>)", creates the session cookie and redirects to `/dashboard`.
+  No password is ever needed or shown. Signup/login for demo emails by password is rejected.
+* **Entry points.** Login page: under the form, a block "Instant demo profiles · no password required" with four
+  cards (Admin — full configuration; Planner — orders, materials, capacity; Supervisor — floor updates on tablets;
+  Viewer — read-only) each a form button posting `demoLoginAction`. Landing page: nav secondary button "View demo"
+  and hero secondary CTA "Explore the live demo" (both POST forms → `demoLoginAction("ADMIN")`), plus the FAQ entry
+  "Can I try it without signing up?". Signup page: link "Just looking? Open the demo plant".
+* **In-app banner.** When `session.tenant.slug === "demo"`, `AppShell` shows a slim amber banner: "Demo plant —
+  shared sample data, refreshed daily. Create your own workspace →" (`/signup`). Demo users cannot open
+  Settings › Users or change the tenant name (`users:manage`/`tenant:manage` return forbidden for the demo tenant)
+  so one visitor cannot lock others out; everything else is fully usable.
+* **Login page layout** (mirrors the reference site, with the v2 theme): two columns on `lg` — left dark brand panel
+  (logo, "Welcome back to the plant's single source of truth", four ✓ value props, the brand principle quote), right
+  card with the form, "Forgot your password?" hint, the demo-profile block and "New plant? Create a workspace →";
+  single column on mobile with the form first and the brand panel reduced to a header strip.
+* Tests: integration — demo login creates the plant on first use, second call reuses it, stale plant is reset and old
+  sessions are revoked, rate limit applies, password login for a demo email fails; unit — role → email mapping.
+
 ## 7. Seed & demo data
 
 `src/lib/demo/seed-tenant.ts` exports `seedDemoData(db: TenantDb, tenant, actor)` and is used by BOTH
