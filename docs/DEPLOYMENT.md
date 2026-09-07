@@ -1,4 +1,4 @@
-# ProdPlan — Deployment (Milestone 1: staging)
+# ProdPlan — Deployment
 
 > Ground truth about the staging account is in `STAGING_STATUS.md`; verified CLI/API details in `STACK_NOTES.md`.
 
@@ -20,6 +20,7 @@
 | `APP_URL` | everywhere | Public origin; used for cookie security flags, JWT audience and Server Action origin checks. |
 | `TEST_DATABASE_URL` | dev only | Separate DB for integration tests (`prodplan_test`). |
 | `SEED_ALLOW` | never in prod | `1` lets `prisma db seed` run against a non-local DB. |
+| `DEMO_RESET_TOKEN` | optional | Enables `POST /api/demo/reset` (header `x-demo-reset-token`) to refresh the shared demo plant on demand; it also refreshes itself daily. |
 
 Staging values already set in the Netlify **production** context: `AUTH_SECRET`, `APP_URL`, `NODE_VERSION=22`,
 `NPM_FLAGS=--include=dev` (from `netlify.toml`).

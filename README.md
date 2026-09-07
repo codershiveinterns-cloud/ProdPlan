@@ -1,12 +1,11 @@
 # ProdPlan — Manufacturing Production Planning SaaS
 
 Multi-tenant production planning for discrete manufacturers: customer orders, machine and work-center capacity,
-shift calendars and downtime, materials and bills of materials, and a live operations dashboard — with a
-scheduling engine, planning board and AI-assisted optimisation arriving in the next milestones.
+shift calendars and downtime, materials and bills of materials, and a live operations dashboard.
 
-**Milestone 1 (this release):** multi-tenant architecture with per-tenant isolation · email/password auth with four
-roles (Admin, Planner, Supervisor, Viewer) · orders (create, edit, CSV import) · customers · products with BOM and
-routing · materials and stock ledger · work centers, machines, shift calendars, downtime windows · admin dashboard ·
+**Included:** multi-tenant architecture with per-tenant isolation · email/password auth with four roles (Admin,
+Planner, Supervisor, Viewer) · one-click demo profiles · orders (create, edit, CSV import) · customers · products with
+BOM and routing · materials and stock ledger · work centers, machines, shift calendars, downtime windows · dashboard ·
 public landing page · staging deployment.
 
 ## Quick start (local)
@@ -57,16 +56,16 @@ src/app/           App Router: (marketing)/ landing · (auth)/ login+signup · (
 src/lib/           db.ts (tenant-scoped Prisma client) · auth/ · rbac.ts · audit.ts · validation/ · domain libs
 src/components/    ui/ (shadcn) · layout/ (AppShell, Sidebar, Topbar) · data/ (DataTable, badges…) · forms/
 tests/             unit/ and integration/ (Vitest)
-docs/              M1_SPEC.md · ARCHITECTURE.md · DEPLOYMENT.md · HANDOVER_M1.md · STACK_NOTES.md · UI_KIT.md
+docs/              ARCHITECTURE.md · DEPLOYMENT.md · HANDOVER.md · STACK_NOTES.md · UI_KIT.md · M1_SPEC.md (build spec)
 scripts/           db-local.sh · mint-session.ts (dev-only session cookie for curl testing)
 ```
 
 ## Documentation
 
-* [docs/M1_SPEC.md](docs/M1_SPEC.md) — the Milestone 1 specification the build follows.
+* [docs/M1_SPEC.md](docs/M1_SPEC.md) — the internal build specification.
 * [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — tenancy, auth, data model, and how M2/M3 plug in.
 * [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — staging on Netlify, environment variables, Docker/VPS path.
-* [docs/HANDOVER_M1.md](docs/HANDOVER_M1.md) — delivered scope vs PRD, decisions, known limitations, demo script.
+* [docs/HANDOVER.md](docs/HANDOVER.md) — delivered scope, decisions, known limitations, demo script.
 
 ## Tests
 
