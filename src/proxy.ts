@@ -4,15 +4,22 @@
  * in every page and action remain the authority (they check isActive / tokenVersion against the DB).
  *
  * (a) no cookie or a token that fails signature/exp verification → /login?next=<path>
- * (b) a verifying cookie on /login, /signup or / → /dashboard
- * (c) /logout, /api/**, /_next/** and static assets pass untouched (matcher + explicit allow-list)
+ * (b) a verifying cookie on /login or /signup → /dashboard
+ * (c) /logout, /api/**, /opengraph-image, /twitter-image, /_next/** and static assets pass untouched (matcher + explicit allow-list)
  * (d) /settings/users and /settings/tenant require the JWT role hint to be ADMIN
+ * (e) "/" (the landing page) passes through for everyone; the (marketing) page shows "Open dashboard" to signed-in users
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionCookieName, sessionCookieOptions, verifySessionToken } from "@/lib/auth/jwt";
 
 const PUBLIC_PATHS = new Set(["/login", "/signup"]);
-const PASSTHROUGH_PREFIXES = ["/logout", "/api/"];
+/** Reachable with or without a session; the page itself decides what to show. */
+const LANDING_PATHS = new Set(["/"]);
+/**
+ * Reachable with or without a session. `/opengraph-image` / `/twitter-image` are code-generated metadata routes
+ * (no file extension, so the matcher does not exclude them) that crawlers and social scrapers fetch anonymously.
+ */
+const PASSTHROUGH_PREFIXES = ["/logout", "/api/", "/opengraph-image", "/twitter-image"];
 const ADMIN_ONLY_PREFIXES = ["/settings/users", "/settings/tenant"];
 const PATHNAME_HEADER = "x-pp-pathname";
 
@@ -34,7 +41,7 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
   const { pathname, search } = req.nextUrl;
   const pathAndSearch = `${pathname}${search}`;
 
-  if (startsWithAny(pathname, PASSTHROUGH_PREFIXES)) {
+  if (startsWithAny(pathname, PASSTHROUGH_PREFIXES) || LANDING_PATHS.has(pathname)) {
     return withPathHeader(req, pathAndSearch);
   }
 
@@ -47,7 +54,7 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     if (isPublic) return withPathHeader(req, pathAndSearch);
     const url = req.nextUrl.clone();
     url.pathname = "/login";
-    url.search = pathname === "/" ? "" : `?next=${encodeURIComponent(pathAndSearch)}`;
+    url.search = `?next=${encodeURIComponent(pathAndSearch)}`;
     const res = NextResponse.redirect(url);
     if (token) {
       // Drop the unusable cookie so the browser stops sending it.

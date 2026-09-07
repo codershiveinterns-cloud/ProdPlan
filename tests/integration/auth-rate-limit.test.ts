@@ -41,7 +41,8 @@ describe.skipIf(!reachable)("rate limit buckets", () => {
 
   it("increments per hit and flags the request that exceeds the limit", async () => {
     const key = keys[0]!;
-    const now = new Date("2026-09-05T10:00:00Z");
+    // Relative to the real clock: the sweep test below expects this bucket to still be "fresh" (< 1 day old).
+    const now = new Date();
     const first = await hit(key, 3, 900, now);
     expect(first).toMatchObject({ limited: false, count: 1, limit: 3, remaining: 2 });
     expect(first.resetAt.getTime()).toBe(now.getTime() + 900_000);
@@ -62,7 +63,7 @@ describe.skipIf(!reachable)("rate limit buckets", () => {
 
   it("resets the window once resetAt has passed", async () => {
     const key = keys[1]!;
-    const start = new Date("2026-09-05T10:00:00Z");
+    const start = new Date();
     for (let i = 0; i < 5; i++) await hit(key, 2, 60, start);
     expect((await hit(key, 2, 60, start)).limited).toBe(true);
 

@@ -168,3 +168,87 @@
     background-color: inherit;
   }
 }
+
+/*
+ * ---------------------------------------------------------------------------------------------------------------
+ * Landing page (src/app/(marketing)/**) — docs/DESIGN_BRIEF.md §3.2, §5.
+ * Scoped to `.marketing` so nothing here leaks into the app. Tokens are the brief's landing-only additions; the
+ * heading font switches to Manrope (`--font-display`, loaded by the marketing layout) with Inter as the fallback.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+.marketing {
+  --primary-hover: oklch(0.457 0.24 277.023); /* indigo-700 #4338ca — white on it 7.90:1 */
+  --primary-soft: oklch(0.962 0.018 272.314); /* indigo-50  #eef2ff */
+  --brand-accent: oklch(0.828 0.189 84.429); /* amber-400  #fbbf24 — graphics only, never text on white */
+  --brand-accent-ink: oklch(0.555 0.163 48.998); /* amber-700  #b45309 — accent text on white 5.02:1 */
+  --band: oklch(0.208 0.042 265.755); /* slate-900  #0f172a — dark band (roadmap, final CTA, footer) */
+  --band-foreground: #ffffff; /* 17.9:1 */
+  --band-muted: oklch(0.869 0.022 252.894); /* slate-300  #cbd5e1 — 12.0:1 on band */
+  --band-subtle: oklch(0.704 0.04 256.788); /* slate-400  #94a3b8 — 6.96:1 on band (small print) */
+  --band-link: oklch(0.785 0.115 274.713); /* indigo-300 #a5b4fc — 8.96:1 on band */
+  --band-accent: oklch(0.828 0.189 84.429); /* amber-400 — 10.7:1 on band */
+  --font-heading: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* `font-heading` is compiled inline to `var(--font-sans)`, so headings need the display family set explicitly. */
+.marketing :is(h1, h2, h3, h4) {
+  font-family: var(--font-heading);
+}
+
+/* Sticky 64 px header: anchor targets and smooth scrolling (only when motion is allowed). */
+html:has(.marketing) {
+  scroll-padding-top: 5rem;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.marketing) {
+    scroll-behavior: smooth;
+  }
+}
+
+/* The one allowed decorative element: a faint dotted grid behind the hero mockup. */
+.marketing-dot-grid {
+  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Single fade-up (12 px, 400 ms) for hero content on load; staggered by data-rise="1..4". */
+@keyframes marketing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.marketing [data-rise] {
+  animation: marketing-rise 400ms ease-out both;
+}
+.marketing [data-rise="2"] {
+  animation-delay: 80ms;
+}
+.marketing [data-rise="3"] {
+  animation-delay: 160ms;
+}
+.marketing [data-rise="4"] {
+  animation-delay: 240ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing [data-rise] {
+    animation: none;
+  }
+}
+
+/* Native <details> FAQ: hide the default marker; the chevron is drawn in markup. */
+.marketing details > summary {
+  list-style: none;
+}
+.marketing details > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Display family as a utility for non-heading display text (hero KPI values, roadmap numerals). */
+@utility font-display {
+  font-family: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}

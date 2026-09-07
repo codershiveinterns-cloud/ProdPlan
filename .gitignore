@@ -50,3 +50,6 @@ coverage/
 
 # keep the example env file in git
 !.env.example
+
+# local Claude launch config
+.claude/

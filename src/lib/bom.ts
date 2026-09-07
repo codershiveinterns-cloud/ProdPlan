@@ -12,7 +12,14 @@ export type NumericInput = number | string | { toString(): string };
 
 /** NumericInput → finite number. Throws RangeError for anything unparsable. */
 export function toNumber(v: NumericInput): number {
-  const n = typeof v === "number" ? v : Number(String(v).trim());
+  let n: number;
+  if (typeof v === "number") {
+    n = v;
+  } else {
+    // Number("") is 0, so blank strings must be rejected explicitly.
+    const s = String(v).trim();
+    n = s === "" ? Number.NaN : Number(s);
+  }
   if (!Number.isFinite(n)) throw new RangeError(`Invalid number: ${String(v)}`);
   return n;
 }

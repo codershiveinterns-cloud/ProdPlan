@@ -195,6 +195,7 @@ const ENTITY_NOUNS: Readonly<Record<string, string>> = {
   User: "User",
   Tenant: "Plant settings",
   ImportBatch: "CSV import",
+  DemoData: "Demo data",
 };
 
 const VERBS: Readonly<Record<AuditAction, string>> = {

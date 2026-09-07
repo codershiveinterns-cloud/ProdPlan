@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { DEFAULT_TIMEZONE, timeZoneOffsetLabel, timeZoneOptions } from "@/lib/auth/timezones";
 import { SignupForm } from "@/app/(auth)/signup/signup-form";
 
-export const metadata: Metadata = { title: "Create your workspace · ProdPlan" };
+export const metadata: Metadata = { title: "Create your workspace" };
 
 export default async function SignupPage() {
   const now = new Date();

@@ -102,13 +102,15 @@ describe.skipIf(!reachable)("signupTenant", () => {
       {},
     );
     createdTenantIds.push(first.tenant.id);
-    const before = await prisma.tenant.count();
+    // Scoped to this run's slugs: other integration files create/delete fixture tenants in parallel.
+    const runTenants = { where: { slug: { startsWith: `sig-${run}` } } };
+    const before = await prisma.tenant.count(runTenants);
 
     await expect(
       signupTenant({ company: `Sig ${run} Dup Two`, timezone: "UTC", name: "B", email: email.toUpperCase(), password: "Password123!" }, {}),
     ).rejects.toBeInstanceOf(EmailTakenError);
 
-    expect(await prisma.tenant.count()).toBe(before);
+    expect(await prisma.tenant.count(runTenants)).toBe(before);
     expect(await prisma.tenant.findFirst({ where: { slug: `sig-${run}-dup-two` } })).toBeNull();
   });
 

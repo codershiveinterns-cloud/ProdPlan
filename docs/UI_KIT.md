@@ -181,11 +181,18 @@ on every open so stale errors never show.
 
 ### `AuditList`
 ```tsx
-<AuditList entries={rows.map((r) => ({ id: r.id, summary: describeAudit(r).text, href: describeAudit(r).href,
-  actorName: r.actorName, createdAtIso: r.createdAt, relative: formatRelative(r.createdAt),
-  absolute: formatDateTime(r.createdAt, tz) }))} />
+<AuditList entries={rows.map((r) => {
+  const { text, href } = describeAudit(r);            // "{actor} {verb} {entity} {label}"
+  const actor = r.actorName?.trim() || r.actorEmail?.trim() || "System";
+  return { id: r.id, actorName: actor,
+    summary: text.startsWith(`${actor} `) ? text.slice(actor.length + 1) : text,   // AuditList renders the actor itself
+    href, createdAtIso: r.createdAt, relative: formatRelative(r.createdAt, now, tz), absolute: formatDateTime(r.createdAt, tz) };
+})} />
 ```
 `AuditListEntry = { id; summary; actorName: string | null; createdAtIso; relative; absolute?; href: string | null }`.
+`AuditList` prints `actorName` in bold before `summary`, so either strip the actor prefix from `describeAudit().text`
+(as above — the dashboard does this) or pass `actorName: null`; passing both renders the actor twice. Entity history
+cards may instead pass the audit row's own `summary` ("Order SO-000123 status IN_PROGRESS → COMPLETED") with `actorName`.
 Filter `entityType in (User, Tenant)` out for roles without `audit:read-all` before passing rows.
 
 ### `StatCard`
@@ -200,7 +207,8 @@ type ActionState<T = unknown> = null | { ok: true; message?: string; data?: T } 
 fieldErrorsFor(state, "quantity")   // string[] | undefined
 actionErrorMessage(error)           // "forbidden" → friendlier text
 ```
-Structurally identical to `ActionState` in `src/lib/action.ts`; import either.
+`ActionState` is owned by `src/lib/action.ts` and re-exported (type-only) from `forms/action-state.ts`; import
+it from either place.
 
 ### `FormField`
 ```tsx
@@ -230,7 +238,8 @@ Use it standalone for form-level errors (`state.error`).
 Popover + cmdk, searchable (label + hint), hidden `<input name>` for plain form posts, 44 px trigger. With
 `allowCreate`, choosing `Create "X"` submits `new:X`; on the server use `parseCreateValue(value)` (exported) →
 `findOrCreateCustomer(tx, name)`. `onValueChange(value, option)` lets a parent client component update e.g. a unit
-suffix. `CREATE_PREFIX = "new:"`.
+suffix. `CREATE_PREFIX = "new:"`. Keyboard: the highlight follows the typed query (first visible match, or the
+`Create "X"` row), so Enter after typing picks the top match; ArrowUp/Down move it as usual.
 
 Empty source lists: render the spec's "No {entity} yet — Create one" link instead of an empty Combobox.
 
@@ -358,6 +367,8 @@ the form inside `DialogContent`, render `FormField`s with `fieldErrorsFor(state,
 ## 5. Shell files owned by the kit
 
 `src/app/layout.tsx` (Inter font, `TooltipProvider`, `<Toaster richColors position="top-right" />`, metadata
-title "ProdPlan"), `src/app/page.tsx` (→ `/dashboard`), `forbidden.tsx` (403; needs
+title "ProdPlan"), `src/app/(marketing)/page.tsx` (the public landing page served at `/`; the proxy lets `/` through
+for everyone and the page shows "Open dashboard" instead of Sign in / Create a workspace when the session cookie
+verifies — there is no `src/app/page.tsx`), `forbidden.tsx` (403; needs
 `experimental.authInterrupts: true` in `next.config.ts` for `forbidden()`), `not-found.tsx`, `error.tsx`,
 `loading.tsx`, `src/app/globals.css`, `src/hooks/use-debounced-callback.ts`.

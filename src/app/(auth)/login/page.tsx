@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { safeNext } from "@/lib/auth/guards";
 import { LoginForm } from "@/app/(auth)/login/login-form";
 
-export const metadata: Metadata = { title: "Sign in · ProdPlan" };
+export const metadata: Metadata = { title: "Sign in" };
 
 const REASON_MESSAGES: Record<string, string> = {
   revoked: "Your session was signed out because your account changed. Please sign in again.",

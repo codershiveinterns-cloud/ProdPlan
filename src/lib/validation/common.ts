@@ -219,7 +219,8 @@ export const timezoneField = z
   .string({ error: "Select a time zone" })
   .trim()
   .min(1, { error: "Select a time zone" })
-  .refine((tz) => isValidTimeZone(tz), { error: "Select a valid time zone" });
+  // A blank value is already reported by `.min(1)`; do not stack a second message on it.
+  .refine((tz) => tz.length === 0 || isValidTimeZone(tz), { error: "Select a valid time zone" });
 
 /** Calendar date as `YYYY-MM-DD` (rejects impossible dates such as 2026-02-30). */
 export function isoDateField(label: string) {
@@ -258,7 +259,7 @@ export function hhmmField(label: string) {
   return z
     .string({ error: `${label} is required` })
     .trim()
-    .regex(HHMM_FIELD_RE, { error: `${label} must be a time in HH:MM format` });
+    .regex(HHMM_FIELD_RE, { error: `${label} must be in HH:MM format` });
 }
 
 const UNIT_RE = /^[a-z0-9][a-z0-9 ./%-]*$/;

@@ -31,9 +31,11 @@ describe("src/proxy.ts (docs/M1_SPEC.md §3)", () => {
     expect(res.headers.get("location")).toBe("http://localhost:3000/login?next=%2Forders%3Fstatus%3Dall");
   });
 
-  it("sends anonymous / to /login without a next", async () => {
+  it("lets anonymous / through (landing page) without a redirect", async () => {
     const res = await proxy(request("/"));
-    expect(res.headers.get("location")).toBe("http://localhost:3000/login");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
+    expect(res.headers.get("x-middleware-request-x-pp-pathname")).toBe("/");
   });
 
   it("lets anonymous users reach /login and /signup and records the path header", async () => {
@@ -60,12 +62,19 @@ describe("src/proxy.ts (docs/M1_SPEC.md §3)", () => {
     expect(res.headers.get("location")).toContain("/login");
   });
 
-  it("bounces signed-in users away from /login, /signup and /", async () => {
+  it("bounces signed-in users away from /login and /signup", async () => {
     const token = await tokenFor("VIEWER");
-    for (const path of ["/login", "/signup", "/"]) {
+    for (const path of ["/login", "/signup"]) {
       const res = await proxy(request(path, token));
       expect(res.headers.get("location")).toBe("http://localhost:3000/dashboard");
     }
+  });
+
+  it("lets signed-in users through on / (the landing page shows them an \"Open dashboard\" link)", async () => {
+    const token = await tokenFor("VIEWER");
+    const res = await proxy(request("/", token));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("location")).toBeNull();
   });
 
   it("passes signed-in users through with the path header", async () => {
@@ -85,8 +94,8 @@ describe("src/proxy.ts (docs/M1_SPEC.md §3)", () => {
     expect((await proxy(request("/settings/profile", planner))).headers.get("location")).toBeNull();
   });
 
-  it("never touches /logout or /api", async () => {
-    for (const path of ["/logout", "/logout?reason=revoked", "/api/health", "/api/orders/template"]) {
+  it("never touches /logout, /api or the generated metadata images", async () => {
+    for (const path of ["/logout", "/logout?reason=revoked", "/api/health", "/api/orders/template", "/opengraph-image", "/opengraph-image?abc123", "/twitter-image"]) {
       const res = await proxy(request(path));
       expect(res.status).toBe(200);
       expect(res.headers.get("location")).toBeNull();

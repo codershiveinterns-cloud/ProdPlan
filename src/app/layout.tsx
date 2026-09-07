@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { appUrl } from "@/lib/auth/jwt";
 
 import "./globals.css";
 
@@ -14,6 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  // Absolute URLs for social images / canonicals resolve against APP_URL (http://localhost:3000 when unset).
+  metadataBase: appUrl(),
   title: {
     default: "ProdPlan",
     template: "%s · ProdPlan",

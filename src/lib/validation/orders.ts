@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { OrderPriority, OrderStatus } from "@/generated/prisma/enums";
 import { normalizeCustomerName } from "@/lib/customers-normalize";
-import { compareDateOnly } from "@/lib/dates";
+import { compareDateOnly, isIsoDate } from "@/lib/dates";
 import { optionalOrderNumberSchema } from "@/lib/orders/numbers";
 import { transitionRequiresReason } from "@/lib/orders/status";
 import { CUSTOMER_NAME_MAX } from "./customers";
@@ -63,14 +63,25 @@ export const orderBaseSchema = z.object({
 
 export type OrderInput = z.infer<typeof orderBaseSchema>;
 
+/**
+ * zod 4 still runs object-level refinements when a field failed its own checks, so every date comparison below
+ * must first confirm it has real `YYYY-MM-DD` values (an invalid date is reported by the field itself).
+ */
 function startNotAfterDue(d: { dueDate: string; earliestStartDate?: string }): boolean {
-  return d.earliestStartDate === undefined || compareDateOnly(d.earliestStartDate, d.dueDate) <= 0;
+  if (d.earliestStartDate === undefined) return true;
+  if (!isIsoDate(d.dueDate) || !isIsoDate(d.earliestStartDate)) return true;
+  return compareDateOnly(d.earliestStartDate, d.dueDate) <= 0;
+}
+
+function dueNotBefore(today: string) {
+  return (d: { dueDate: string }): boolean =>
+    !isIsoDate(d.dueDate) || !isIsoDate(today) || compareDateOnly(d.dueDate, today) >= 0;
 }
 
 /** Create: `dueDate ≥ today` (today = `todayInTz(tenant.timezone)`) and `earliestStartDate ≤ dueDate`. */
 export function createOrderSchema(today: string) {
   return orderBaseSchema
-    .refine((d) => compareDateOnly(d.dueDate, today) >= 0, { error: DUE_DATE_PAST_MESSAGE, path: ["dueDate"] })
+    .refine(dueNotBefore(today), { error: DUE_DATE_PAST_MESSAGE, path: ["dueDate"] })
     .refine(startNotAfterDue, { error: START_AFTER_DUE_MESSAGE, path: ["earliestStartDate"] });
 }
 

@@ -1,12 +1,11 @@
 /**
- * Result shape returned by every Server Action wrapped with `withAction()` (src/lib/action.ts, owner: auth-core).
- * Re-declared here so the UI kit compiles before that module lands; it MUST stay structurally identical to
- * `ActionState` in src/lib/action.ts. Pages may import either — TypeScript treats them as the same type.
+ * `ActionState` is owned by src/lib/action.ts (the `withAction()` result shape). It is re-exported here so form
+ * components and pages can import it next to the two UI helpers below. Type-only, so client bundles never pull in
+ * the server-side action plumbing.
  */
-export type ActionState<T = unknown> =
-  | null
-  | { ok: true; message?: string; data?: T }
-  | { ok: false; error: string; fieldErrors?: Record<string, string[]> };
+import type { ActionState } from "@/lib/action";
+
+export type { ActionState } from "@/lib/action";
 
 /** Field errors for one input from an ActionState (undefined when none). */
 export function fieldErrorsFor(state: ActionState, name: string): string[] | undefined {

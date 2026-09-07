@@ -87,6 +87,15 @@ export function Combobox({
   const typed = query.trim().replace(/\s+/g, " ");
   const exactExists = typed !== "" && options.some((option) => normalise(option.label) === normalise(typed));
   const showCreate = allowCreate && typed !== "" && !exactExists;
+  const createValue = showCreate ? `${CREATE_PREFIX}${typed}` : null;
+
+  // cmdk re-highlights the first row only when it filters the list itself; with `shouldFilter={false}` a stale
+  // highlight survives the query change and Enter then selects nothing. Keep the highlight controlled: it follows
+  // arrow keys while the visible rows stay the same and falls back to the first visible row whenever typing changes
+  // them (derived during render, so no effect is needed).
+  const visibleKey = filtered.map((option) => option.value).join("\u0000") + (createValue ? `\u0000${createValue}` : "");
+  const [highlight, setHighlight] = useState<{ key: string; value: string } | null>(null);
+  const highlighted = highlight?.key === visibleKey ? highlight.value : (filtered[0]?.value ?? createValue ?? "");
 
   const commit = (next: string) => {
     setValue(next);
@@ -142,7 +151,12 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-(--radix-popover-trigger-width) min-w-64 p-0">
-        <Command shouldFilter={false} className="rounded-lg!">
+        <Command
+          shouldFilter={false}
+          value={highlighted}
+          onValueChange={(next) => setHighlight({ key: visibleKey, value: next })}
+          className="rounded-lg!"
+        >
           <CommandInput
             value={query}
             onValueChange={setQuery}
@@ -170,8 +184,8 @@ export function Combobox({
             {showCreate ? (
               <CommandGroup>
                 <CommandItem
-                  value={`${CREATE_PREFIX}${typed}`}
-                  onSelect={() => commit(`${CREATE_PREFIX}${typed}`)}
+                  value={createValue ?? `${CREATE_PREFIX}${typed}`}
+                  onSelect={() => commit(createValue ?? `${CREATE_PREFIX}${typed}`)}
                   className="text-primary data-selected:text-primary"
                 >
                   <Plus className="size-4" aria-hidden="true" />

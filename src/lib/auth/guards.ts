@@ -3,7 +3,7 @@
  * `requirePermission()` itself — the layout and the proxy are never the authority.
  */
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { can, type Permission } from "@/lib/rbac";
 import { ForbiddenError } from "@/lib/errors";
 import { tenantDb, type TenantDb } from "@/lib/db";
@@ -85,6 +85,24 @@ export async function requirePermission(
     throw new ForbiddenError();
   }
   return { session, db: tenantDb(session.tenant.id) };
+}
+
+/**
+ * `requirePermission()` for Server Component pages: a `ForbiddenError` becomes Next's `forbidden()` interrupt
+ * (renders src/app/forbidden.tsx with HTTP 403; needs `experimental.authInterrupts`), while the redirects thrown by
+ * `requireSession()` propagate untouched. Server Actions keep using `requirePermission()` inside `withAction()`,
+ * which maps the error to `{ ok: false, error: "forbidden" }`.
+ */
+export async function requirePagePermission(
+  permission: Permission,
+  opts: RequireSessionOptions = {},
+): Promise<{ session: Session; db: TenantDb }> {
+  try {
+    return await requirePermission(permission, opts);
+  } catch (err) {
+    if (err instanceof ForbiddenError) forbidden();
+    throw err;
+  }
 }
 
 export function getTenantDb(session: Session): TenantDb {
