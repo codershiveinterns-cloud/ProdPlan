@@ -29,8 +29,8 @@ export function OrdersSnippet() {
             <>
               <th>Order #</th>
               <th className="hidden @sm:table-cell">Customer</th>
-              <th className="hidden @lg:table-cell">Product</th>
-              <th className="hidden text-right @md:table-cell">Qty</th>
+              <th className="hidden @2xl:table-cell">Product</th>
+              <th className="hidden text-right @lg:table-cell">Qty</th>
               <th>Due</th>
               <th className="hidden @md:table-cell">Priority</th>
               <th>Status</th>
@@ -42,8 +42,8 @@ export function OrdersSnippet() {
               <Code>SO-000121</Code>
             </td>
             <td className="hidden @sm:table-cell">Deccan Motors</td>
-            <td className="hidden @lg:table-cell">GX-40 Gearbox Housing</td>
-            <td className="hidden text-right @md:table-cell">120 pcs</td>
+            <td className="hidden @2xl:table-cell">GX-40 Gearbox Housing</td>
+            <td className="hidden text-right @lg:table-cell">120 pcs</td>
             <td>
               <Due tone="overdue">Overdue 3d</Due>
             </td>
@@ -59,8 +59,8 @@ export function OrdersSnippet() {
               <Code>SO-000123</Code>
             </td>
             <td className="hidden @sm:table-cell">Kaveri Pumps</td>
-            <td className="hidden @lg:table-cell">PF-12 Pump Flange</td>
-            <td className="hidden text-right @md:table-cell">400 pcs</td>
+            <td className="hidden @2xl:table-cell">PF-12 Pump Flange</td>
+            <td className="hidden text-right @lg:table-cell">400 pcs</td>
             <td>
               <Due tone="soon">Due tomorrow</Due>
             </td>
@@ -76,8 +76,8 @@ export function OrdersSnippet() {
               <Code>SO-000118</Code>
             </td>
             <td className="hidden @sm:table-cell">Vikram Auto</td>
-            <td className="hidden @lg:table-cell">HB-200 Hydraulic Bracket</td>
-            <td className="hidden text-right @md:table-cell">250 pcs</td>
+            <td className="hidden @2xl:table-cell">HB-200 Hydraulic Bracket</td>
+            <td className="hidden text-right @lg:table-cell">250 pcs</td>
             <td>
               <Due tone="upcoming">Due in 2d</Due>
             </td>
@@ -93,8 +93,8 @@ export function OrdersSnippet() {
               <Code>SO-000119</Code>
             </td>
             <td className="hidden @sm:table-cell">Nilgiri Tools</td>
-            <td className="hidden @lg:table-cell">HB-200 Hydraulic Bracket</td>
-            <td className="hidden text-right @md:table-cell">180 pcs</td>
+            <td className="hidden @2xl:table-cell">HB-200 Hydraulic Bracket</td>
+            <td className="hidden text-right @lg:table-cell">180 pcs</td>
             <td>
               <Due tone="upcoming">Due in 5d</Due>
             </td>

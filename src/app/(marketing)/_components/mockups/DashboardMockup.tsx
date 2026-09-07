@@ -42,7 +42,7 @@ export function DashboardMockup({ className }: { className?: string }) {
     <div className={cn("relative", className)}>
       <BrowserFrame
         url="acme.prodplan.app/dashboard"
-        tabs={["Acme Precision", "Beta Fab"]}
+        tabs={["Acme Precision", "Second plant"]}
         caption="Illustration of the ProdPlan dashboard for a demo plant: KPI tiles for open, overdue and due-soon orders and materials below reorder; an orders-by-due-date table with priority and status badges; today's available minutes per machine with a maintenance window; and a chip flagging a material below its reorder threshold."
       >
         <div className="flex flex-col gap-3 bg-background p-3 @md:p-4">

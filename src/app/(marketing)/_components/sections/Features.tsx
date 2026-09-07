@@ -45,7 +45,7 @@ export function Features() {
             ))}
           </ul>
           <div className="mt-7 flex w-full items-center gap-4 rounded-2xl border border-teal-100 bg-primary-soft/70 p-4">
-            <span className="font-display text-3xl font-extrabold tracking-tight text-primary tabular-nums">{f.stat.value}</span>
+            <span className="font-display text-3xl font-extrabold tracking-tight whitespace-nowrap text-primary tabular-nums">{f.stat.value}</span>
             <span className="leading-snug">
               <span className="block text-sm font-semibold text-foreground">{f.stat.label}</span>
               <span className="block text-xs text-stone-600">{f.stat.detail}</span>
