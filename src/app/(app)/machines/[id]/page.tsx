@@ -20,6 +20,7 @@ import { buildCapacityTable } from "@/lib/machines/capacity";
 import { listDowntime, machineAuditWhere, type DowntimeRow } from "@/lib/machines/downtime";
 import { getMachineDetail, machineUsage, ratedOutputLabel } from "@/lib/machines/machines";
 import { requirePagePermission } from "@/lib/machines/page-guard";
+import { getTenantDb, requireSession } from "@/lib/auth/guards";
 import { can } from "@/lib/rbac";
 
 import { CapacityTable } from "../_components/CapacityTable";
@@ -28,7 +29,12 @@ import { DowntimeRowActions } from "../_components/DowntimeRowActions";
 import { MachineActionsMenu } from "../_components/MachineActionsMenu";
 import { SavedToast } from "../_components/SavedToast";
 
-export const metadata: Metadata = { title: "Machine" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const session = await requireSession();
+  const machine = await getTenantDb(session).machine.findUnique({ where: { id }, select: { code: true } });
+  return { title: machine ? machine.code : "Machine" };
+}
 
 function DowntimeRows({
   rows,

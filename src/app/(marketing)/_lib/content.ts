@@ -1,6 +1,6 @@
 /**
  * Landing-page copy (docs/DESIGN_BRIEF.md §6–§7). Kept in one place so wording changes never touch markup.
- * Everything here is an M1 fact; roadmap items are labelled "Coming next" and never presented as shipped.
+ * Everything here describes the shipped product (docs/LANDING_REFERENCE.md: production framing, no roadmap wording).
  */
 
 export const SITE = {
@@ -134,19 +134,6 @@ export const ISOLATION_CARD = {
   copy: "Each plant is its own workspace. Every table carries the workspace id, every query is scoped, every cross-table reference is enforced by the database, and every order or master-data change is written to an append-only audit log.",
 } as const;
 
-export const ROADMAP: ReadonlyArray<{ title: string; copy: string }> = [
-  {
-    title: "The planning board",
-    copy: "A day-by-day, machine-by-machine schedule built from the same orders, calendars and stock you set up today. Overloaded machines, short materials and at-risk delivery dates are flagged before they reach the floor, and supervisors' status updates feed straight back into the plan.",
-  },
-  {
-    title: "Assistance from AI",
-    copy: "Suggested sequences that minimise conflicts, shortage prediction against BOM requirements and reorder lead times, and delivery-risk detection with the reason attached. Always a suggestion; the planner decides.",
-  },
-];
-
-export const ROADMAP_FOOTNOTE = "Everything builds on one record of orders and master data.";
-
 export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
     question: "Does ProdPlan schedule jobs onto machines?",
@@ -171,7 +158,7 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
     question: "Does it work on a tablet on the floor?",
     answer:
-      "Yes. Controls are at least 44 px, tables collapse to the essential columns on narrow screens and forms keep a sticky action bar. A dedicated floor app is not part of this release.",
+      "Yes. Controls are at least 44 px, tables collapse to the essential columns on narrow screens and forms keep a sticky action bar.",
   },
   {
     question: "What if someone forgets their password?",

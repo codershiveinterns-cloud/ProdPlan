@@ -4,27 +4,27 @@ import { HERO } from "../../_lib/content";
 import { DashboardMockup } from "../mockups/DashboardMockup";
 import { Container, CtaLink, Eyebrow, TextLink } from "../ui";
 
-/** Hero (brief §6.2): copy 5/12, Mockup A 7/12 at ≥ lg; stacked below. The only animated block on the page. */
+/** Hero (brief §6.2): copy 5/12, Mockup A 7/12 at ≥ lg; stacked below. No entrance animation: the copy must be readable the instant the page paints. */
 export function Hero({ signedIn }: { signedIn: boolean }) {
   return (
     <section aria-labelledby="hero-title" className="relative overflow-hidden pt-12 pb-16 sm:pt-16 lg:pt-20 lg:pb-24">
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="flex max-w-2xl flex-col items-start gap-6 lg:col-span-5">
-            <div data-rise="1">
+            <div>
               <Eyebrow>{HERO.eyebrow}</Eyebrow>
             </div>
             <h1
               id="hero-title"
-              data-rise="2"
+             
               className="max-w-[14ch] text-[2.375rem] leading-[1.05] font-extrabold tracking-[-0.03em] text-foreground md:text-5xl xl:text-[3.5rem]"
             >
               {HERO.headline}
             </h1>
-            <p data-rise="3" className="max-w-[60ch] text-lg leading-relaxed text-pretty text-muted-foreground md:text-xl">
+            <p className="max-w-[60ch] text-lg leading-relaxed text-pretty text-muted-foreground md:text-xl">
               {HERO.subhead}
             </p>
-            <div data-rise="4" className="flex w-full flex-col gap-3">
+            <div className="flex w-full flex-col gap-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 {signedIn ? (
                   <CtaLink href="/dashboard">

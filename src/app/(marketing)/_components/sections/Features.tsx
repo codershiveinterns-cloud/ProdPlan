@@ -26,7 +26,7 @@ export function Features() {
         <SectionHeader
           id="features-title"
           eyebrow="Everything in one workspace"
-          title="Everything the schedule will run on, kept honest."
+          title="From order intake to shop-floor capacity."
           lead="Orders with deadlines, machines with real shift capacity, materials with real stock — and a dashboard that shows where the day stands."
         />
         <ul className="mt-12 grid gap-6 md:grid-cols-2 xl:grid-cols-3 lg:mt-16">

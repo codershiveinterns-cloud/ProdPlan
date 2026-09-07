@@ -77,7 +77,7 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
 
         <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-(--band-subtle) sm:flex-row sm:items-center sm:justify-between">
           <p>
-            © {year} {SITE.name} · {FOOTER.milestone}
+            © {year} {SITE.name}. {SITE.tagline}
           </p>
           <p>{FOOTER.builtWith}</p>
         </div>

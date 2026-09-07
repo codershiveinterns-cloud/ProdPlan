@@ -64,7 +64,7 @@ export function FilterBar({
       <form
         method="get"
         action={pathname}
-        className="hidden flex-wrap items-end gap-3 md:flex"
+        className="hidden flex-wrap items-end gap-3 md:flex md:[&_[data-slot=field]]:w-auto md:[&_[data-slot=field]]:min-w-36"
         aria-label="Filters"
       >
         {hiddenInputs}

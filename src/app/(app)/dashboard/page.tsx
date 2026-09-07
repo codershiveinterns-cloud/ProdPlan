@@ -134,8 +134,8 @@ export default async function DashboardPage() {
 
       <KpiTiles kpis={data.kpis} hrefs={data.hrefs} />
 
-      <div className="grid gap-8 xl:grid-cols-3">
-        <div className="flex min-w-0 flex-col gap-8 xl:col-span-2">
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="flex min-w-0 flex-col gap-8">
           <DashboardSection
             title="Orders by due date"
             description="Open orders, earliest due first. Overdue rows are tinted."

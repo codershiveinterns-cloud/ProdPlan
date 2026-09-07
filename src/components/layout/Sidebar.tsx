@@ -14,9 +14,6 @@ export function Sidebar({ role, tenantName }: { role: Role; tenantName: string }
       <div className="flex-1 overflow-y-auto py-3">
         <SidebarNav role={role} />
       </div>
-      <div className="border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground">
-        ProdPlan · Production planning
-      </div>
     </aside>
   );
 }

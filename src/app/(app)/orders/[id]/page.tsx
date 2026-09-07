@@ -153,8 +153,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <CardHeader className="py-4">
               <CardTitle>Material requirement</CardTitle>
               <CardDescription>
-                Required = quantity × material per unit incl. scrap, vs unallocated stock on hand (does not net other open orders —
-                allocation arrives with the M2 scheduler).
+                Required = quantity × material per unit incl. scrap, vs unallocated stock on hand (does not net other open orders).
               </CardDescription>
             </CardHeader>
             <div className="border-t">

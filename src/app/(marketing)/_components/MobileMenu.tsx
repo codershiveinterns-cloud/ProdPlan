@@ -73,9 +73,7 @@ export function MobileMenu({
                 >
                   Sign in
                 </Link>
-                <Link href="/signup" onClick={close} className={cn(BUTTON, "bg-primary text-primary-foreground shadow-xs")}>
-                  Get started
-                </Link>
+                <Link href="/signup" onClick={close} className={cn(BUTTON, "bg-primary text-primary-foreground shadow-xs")}>Create workspace</Link>
               </>
             )}
           </div>

@@ -232,7 +232,7 @@ function BomSection({
             ) : null}
           </p>
           <p className="text-xs text-muted-foreground">
-            vs unallocated stock on hand (does not net other open orders — allocation arrives with the M2 scheduler)
+            vs unallocated stock on hand (does not net other open orders)
           </p>
         </div>
       </CardHeader>

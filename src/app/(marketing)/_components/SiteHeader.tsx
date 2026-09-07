@@ -34,9 +34,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
               <CtaLink href="/login" variant="ghost" size="md" className="hidden sm:inline-flex">
                 Sign in
               </CtaLink>
-              <CtaLink href="/signup" size="md">
-                Get started
-              </CtaLink>
+              <CtaLink href="/signup" size="md">Create workspace</CtaLink>
             </>
           )}
           <MobileMenu signedIn={signedIn} links={NAV_LINKS} />

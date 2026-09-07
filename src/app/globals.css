@@ -230,35 +230,6 @@ html:has(.marketing) {
   background-size: 24px 24px;
 }
 
-/* Single fade-up (12 px, 400 ms) for hero content on load; staggered by data-rise="1..4". */
-@keyframes marketing-rise {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.marketing [data-rise] {
-  animation: marketing-rise 400ms ease-out both;
-}
-.marketing [data-rise="2"] {
-  animation-delay: 80ms;
-}
-.marketing [data-rise="3"] {
-  animation-delay: 160ms;
-}
-.marketing [data-rise="4"] {
-  animation-delay: 240ms;
-}
-@media (prefers-reduced-motion: reduce) {
-  .marketing [data-rise] {
-    animation: none;
-  }
-}
-
 /* Native <details> FAQ: hide the default marker; the chevron is drawn in markup. */
 .marketing details > summary {
   list-style: none;

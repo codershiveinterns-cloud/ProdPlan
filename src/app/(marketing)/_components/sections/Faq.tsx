@@ -14,7 +14,7 @@ export function Faq() {
             eyebrow="FAQ"
             align="left"
             title="Questions planners ask first."
-            lead="Scope, import, isolation, roles, tablets and passwords — the honest answers for this release."
+            lead="Scope, import, isolation, roles, tablets and passwords — the straight answers."
             className="lg:col-span-4"
           />
           <div className="lg:col-span-8">

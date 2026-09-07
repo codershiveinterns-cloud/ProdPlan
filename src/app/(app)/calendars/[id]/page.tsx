@@ -24,6 +24,7 @@ import { toDateOnly, todayInTz } from "@/lib/dates";
 import { formatDate, formatDateTime, formatInt } from "@/lib/format";
 import { loadAuditEntries } from "@/lib/machines/audit-feed";
 import { requirePagePermission } from "@/lib/machines/page-guard";
+import { getTenantDb, requireSession } from "@/lib/auth/guards";
 import { can } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 
@@ -34,7 +35,12 @@ import { ShiftDialog } from "../_components/ShiftDialog";
 import { ShiftRowActions } from "../_components/ShiftRowActions";
 import { SavedToast } from "@/app/(app)/machines/_components/SavedToast";
 
-export const metadata: Metadata = { title: "Shift calendar" };
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const session = await requireSession();
+  const calendar = await getTenantDb(session).shiftCalendar.findUnique({ where: { id }, select: { name: true } });
+  return { title: calendar ? calendar.name : "Shift calendar" };
+}
 
 type ExceptionRow = ExceptionDialogException & { dateLabel: string; dayLabel: string; isPast: boolean };
 

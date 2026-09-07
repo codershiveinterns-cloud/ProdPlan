@@ -24,13 +24,13 @@ export function OrdersDueTable({ rows, today, canCreate }: { rows: OrdersDueRow[
         </Link>
       ),
     },
-    { key: "customer", header: "Customer", priority: 2, render: (o) => <span className="block max-w-56 truncate">{o.customerName}</span> },
+    { key: "customer", header: "Customer", priority: 2, render: (o) => <span className="block max-w-40 truncate">{o.customerName}</span> },
     {
       key: "product",
       header: "Product",
       priority: 1,
       render: (o) => (
-        <span className="block max-w-64 truncate">
+        <span className="block max-w-52 truncate">
           <span className="font-mono">{o.productSku}</span>
           <span className="text-muted-foreground"> · {o.productName}</span>
         </span>
