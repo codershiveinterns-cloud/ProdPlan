@@ -13,6 +13,7 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   "login",
   "signup",
   "settings",
+  "demo",
 ]);
 
 function trimDashes(s: string): string {

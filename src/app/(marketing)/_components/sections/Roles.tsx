@@ -1,62 +1,51 @@
-import { Eye, ShieldCheck, UserCog, UserRoundCog, Wrench } from "lucide-react";
+import { ArrowRight, Eye, Settings, UserCog, Wrench } from "lucide-react";
 
-import { ISOLATION_CARD, ROLES, ROLES_INTRO } from "../../_lib/content";
-import { Container, IconChip, Section, SectionHeader } from "../ui";
+import { ROLES } from "../../_lib/content";
+import { Reveal } from "../Reveal";
+import { Card, CheckItem, Container, IconTile, Pill, Section, SectionHeader, TextLink } from "../ui";
 
-const ROLE_ICONS = [UserCog, UserRoundCog, Wrench, Eye] as const;
+const ICONS = [Settings, UserCog, Wrench, Eye] as const;
 
-/** Four roles + the isolation/audit side card (brief §6.6). */
+/** Four role cards (reference "Industries" anatomy): icon tile, label pill, H3, paragraph, three ✓ bullets, CTA link. */
 export function Roles() {
   return (
-    <Section id="roles" aria-labelledby="roles-title">
+    <Section id="roles" aria-labelledby="roles-title" className="border-t border-border bg-stone-50">
       <Container>
-        <SectionHeader id="roles-title" eyebrow="Built for every role" title="The right access from admin to floor supervisor." lead={ROLES_INTRO} />
-        <div className="mt-12 grid gap-6 lg:mt-16 lg:grid-cols-3">
-          <ul className="grid gap-6 sm:grid-cols-2 lg:col-span-2">
-            {ROLES.map((role, i) => {
-              const Icon = ROLE_ICONS[i] ?? UserCog;
-              return (
-                <li key={role.name} className="flex flex-col gap-3 rounded-2xl bg-white p-6 ring-1 ring-foreground/10">
-                  <IconChip>
-                    <Icon />
-                  </IconChip>
-                  <h3 className="text-xl leading-tight font-bold text-foreground">{role.name}</h3>
-                  <p className="text-base leading-relaxed text-pretty text-muted-foreground">{role.blurb}</p>
-                </li>
-              );
-            })}
-          </ul>
-
-          <aside
-            aria-labelledby="isolation-title"
-            className="flex flex-col gap-4 rounded-2xl marketing-band p-6 text-(--band-foreground) ring-1 ring-foreground/10 lg:p-8"
-          >
-            <span className="flex size-10 items-center justify-center rounded-lg bg-white/10 text-(--band-accent)" aria-hidden="true">
-              <ShieldCheck className="size-5" />
-            </span>
-            <h3 id="isolation-title" className="text-xl leading-tight font-bold">
-              {ISOLATION_CARD.title}
-            </h3>
-            <p className="text-base leading-relaxed text-pretty text-(--band-muted)">{ISOLATION_CARD.copy}</p>
-            <dl className="mt-auto grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-5 text-sm">
-              <div>
-                <dt className="text-(--band-subtle)">Scoping</dt>
-                <dd className="font-medium">Every query, every table</dd>
-              </div>
-              <div>
-                <dt className="text-(--band-subtle)">References</dt>
-                <dd className="font-medium">Enforced in the database</dd>
-              </div>
-              <div>
-                <dt className="text-(--band-subtle)">Audit log</dt>
-                <dd className="font-medium">Append-only, who/what/when</dd>
-              </div>
-              <div>
-                <dt className="text-(--band-subtle)">Sessions</dt>
-                <dd className="font-medium">Revocable per user</dd>
-              </div>
-            </dl>
-          </aside>
+        <Reveal>
+          <SectionHeader
+            id="roles-title"
+            pill="Built for every role"
+            title="The right controls for every person in the plant"
+            lead="Four roles, enforced on the server for every page and action — not just hidden buttons."
+          />
+        </Reveal>
+        <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {ROLES.map((role, i) => {
+            const Icon = ICONS[i];
+            return (
+              <Reveal key={role.name} delay={i * 100} className="flex">
+                <Card className="flex w-full flex-col">
+                  <IconTile>
+                    <Icon aria-hidden="true" />
+                  </IconTile>
+                  <Pill className="mt-5 self-start" tone="neutral">
+                    {role.label}
+                  </Pill>
+                  <h3 className="mt-3 text-xl font-bold tracking-tight text-foreground">{role.name}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-stone-600">{role.blurb}</p>
+                  <ul className="mt-5 flex flex-col gap-2.5">
+                    {role.bullets.map((b) => (
+                      <CheckItem key={b}>{b}</CheckItem>
+                    ))}
+                  </ul>
+                  <TextLink href="/signup" className="mt-auto pt-6 text-sm">
+                    Create your workspace
+                    <ArrowRight aria-hidden="true" />
+                  </TextLink>
+                </Card>
+              </Reveal>
+            );
+          })}
         </div>
       </Container>
     </Section>

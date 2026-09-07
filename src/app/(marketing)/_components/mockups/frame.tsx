@@ -186,3 +186,48 @@ export function KpiTile({
     </div>
   );
 }
+
+/**
+ * Browser-chrome frame (reference hero): dark title bar with three dots, a URL pill and two workspace tabs,
+ * wrapping an app surface. Decorative; the caption is read by screen readers.
+ */
+export function BrowserFrame({
+  url,
+  tabs,
+  caption,
+  className,
+  children,
+}: {
+  url: string;
+  tabs: readonly [string, string];
+  caption: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <figure className={cn("relative m-0", className)}>
+      <div
+        aria-hidden="true"
+        className="@container overflow-hidden rounded-2xl bg-white text-[13px] leading-tight text-stone-700 shadow-[0_2px_4px_rgb(28_25_23_/_0.04),0_32px_64px_-24px_rgb(11_43_42_/_0.35)] ring-1 ring-stone-900/10 [font-variant-numeric:tabular-nums]"
+      >
+        <div className="marketing-chrome flex items-center gap-3 px-3 py-2.5 @md:px-4">
+          <span className="flex shrink-0 gap-1.5">
+            <span className="size-2.5 rounded-full bg-red-400" />
+            <span className="size-2.5 rounded-full bg-amber-400" />
+            <span className="size-2.5 rounded-full bg-green-400" />
+          </span>
+          <span className="flex min-w-0 flex-1 items-center gap-2 rounded-md bg-white/10 px-2.5 py-1 font-mono text-[11px] text-teal-100/90">
+            <span className="size-2.5 shrink-0 rounded-full border border-teal-200/50" />
+            <span className="truncate">{url}</span>
+          </span>
+          <span className="hidden shrink-0 gap-1 @sm:flex">
+            <span className="rounded-md bg-primary px-2 py-1 text-[10px] font-medium text-white">{tabs[0]}</span>
+            <span className="rounded-md bg-white/10 px-2 py-1 text-[10px] font-medium text-teal-100/80">{tabs[1]}</span>
+          </span>
+        </div>
+        {children}
+      </div>
+      <figcaption className="sr-only">{caption}</figcaption>
+    </figure>
+  );
+}

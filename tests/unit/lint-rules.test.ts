@@ -10,7 +10,7 @@ const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
 
 /** Files allowed to import the raw `prisma` client / `PrismaClient` (spec §2). */
-const RAW_PRISMA_ALLOWED = ["src/lib/db.ts", "src/lib/auth/**", "src/lib/rate-limit.ts", "src/app/api/health/route.ts", "prisma/seed.ts", "tests/**"];
+const RAW_PRISMA_ALLOWED = ["src/lib/db.ts", "src/lib/auth/**", "src/lib/rate-limit.ts", "src/lib/demo/demo-plant.ts", "src/app/api/health/route.ts", "prisma/seed.ts", "tests/**"];
 /** Files allowed to contain the literal `passwordHash` (spec §3; serialize.ts is the redaction list). */
 const PASSWORD_HASH_ALLOWED = ["src/lib/auth/**", "src/lib/serialize.ts", "prisma/seed.ts", "tests/**"];
 

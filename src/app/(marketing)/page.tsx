@@ -5,9 +5,12 @@ import { Features } from "./_components/sections/Features";
 import { FinalCta } from "./_components/sections/FinalCta";
 import { Hero } from "./_components/sections/Hero";
 import { HowItWorks } from "./_components/sections/HowItWorks";
-import { ProofStrip } from "./_components/sections/ProofStrip";
+import { IndustryStrip } from "./_components/sections/IndustryStrip";
+import { Platform } from "./_components/sections/Platform";
+import { PrincipleBand } from "./_components/sections/PrincipleBand";
 import { Roles } from "./_components/sections/Roles";
-import { HERO, SITE } from "./_lib/content";
+import { Security } from "./_components/sections/Security";
+import { SITE } from "./_lib/content";
 import { hasVerifiedSession } from "./_lib/session";
 
 /**
@@ -19,34 +22,35 @@ const OG_IMAGE = {
   url: "/opengraph-image",
   width: 1200,
   height: 630,
-  alt: `${SITE.name} — ${HERO.headline}`,
+  alt: SITE.title,
 };
 
 export const metadata: Metadata = {
   title: { absolute: SITE.title },
-  description: HERO.subhead,
+  description: SITE.description,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     url: "/",
     siteName: SITE.name,
     title: SITE.title,
-    description: HERO.subhead,
+    description: SITE.description,
     locale: "en_GB",
     images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE.title,
-    description: HERO.subhead,
+    description: SITE.description,
     images: [OG_IMAGE],
   },
 };
 
 /**
- * `/` — the public landing page (docs/DESIGN_BRIEF.md §6). `src/proxy.ts` lets everyone through; a visitor with
- * a verifying session cookie sees "Open dashboard" in place of the sign-up actions (no redirect, no DB read).
- * Section order: Hero · Proof strip · Features · How it works · Roles · FAQ · Final CTA.
+ * `/` — the public landing page (docs/LANDING_REFERENCE.md §2). `src/proxy.ts` lets everyone through; a visitor
+ * with a verifying session cookie sees "Open dashboard" in place of the sign-up actions (no redirect, no DB read).
+ * Section order: Hero · Industry strip · Features · How it works · Roles · Security · Principle band · Platform ·
+ * FAQ · Final CTA.
  */
 export default async function LandingPage() {
   const signedIn = await hasVerifiedSession();
@@ -54,10 +58,13 @@ export default async function LandingPage() {
   return (
     <>
       <Hero signedIn={signedIn} />
-      <ProofStrip />
+      <IndustryStrip />
       <Features />
       <HowItWorks />
       <Roles />
+      <Security />
+      <PrincipleBand />
+      <Platform />
       <Faq />
       <FinalCta signedIn={signedIn} />
     </>

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import { PageHeader } from "@/components/layout/PageHeader";
-import { requireSession } from "@/lib/auth/guards";
-import { can } from "@/lib/rbac";
+import { canInTenant, requireSession } from "@/lib/auth/guards";
 
 import { SettingsTabs, type SettingsTab } from "./_components/SettingsTabs";
 
@@ -12,13 +11,14 @@ export const metadata: Metadata = { title: { default: "Settings", template: "%s 
 
 /**
  * Settings shell (docs/M1_SPEC.md §6.8): Tenant + Users tabs for ADMIN, Profile for everyone. The tabs are
- * navigation only — each page still calls `requirePermission()` itself.
+ * navigation only — each page still calls `requirePermission()` itself. In the shared demo plant (§6.9) the
+ * Tenant and Users tabs are hidden because those permissions are locked there.
  */
 export default async function SettingsLayout({ children }: { children: ReactNode }) {
   const session = await requireSession();
   const tabs: SettingsTab[] = [
-    ...(can(session.user.role, "tenant:manage") ? [{ label: "Tenant", href: "/settings/tenant" }] : []),
-    ...(can(session.user.role, "users:manage") ? [{ label: "Users", href: "/settings/users" }] : []),
+    ...(canInTenant(session.user.role, session.tenant, "tenant:manage") ? [{ label: "Tenant", href: "/settings/tenant" }] : []),
+    ...(canInTenant(session.user.role, session.tenant, "users:manage") ? [{ label: "Users", href: "/settings/users" }] : []),
     { label: "Profile", href: "/settings/profile" },
   ];
 

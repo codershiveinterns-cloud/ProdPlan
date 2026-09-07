@@ -1,17 +1,28 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
+import type { Role } from "@/generated/prisma/enums";
 import { fail, fieldError, parseForm, withAction, type ActionState } from "@/lib/action";
 import { safeNext } from "@/lib/auth/guards";
 import { authenticate } from "@/lib/auth/login";
 import { loginSchema, signupSchema } from "@/lib/auth/schemas";
-import { clearSessionCookie, createSession } from "@/lib/auth/session";
+import { clearSessionCookie, createSession, reissueSessionFor } from "@/lib/auth/session";
 import { EmailTakenError, signupTenant } from "@/lib/auth/signup";
+import {
+  checkDemoRateLimit,
+  DEMO_EMAIL_REJECTED_MESSAGE,
+  demoSignIn,
+  isDemoEmail,
+  isDemoRole,
+  resetDemoPlantIfStale,
+} from "@/lib/demo/demo-plant";
+import { logger } from "@/lib/logger";
 import { clientIp, hit, RATE_LIMITS, signupIpKey, tooManyAttemptsMessage } from "@/lib/rate-limit";
 
 export const loginAction = withAction<never>(async (formData: FormData): Promise<ActionState<never>> => {
   const input = parseForm(loginSchema, formData);
+  if (isDemoEmail(input.email)) return fail(DEMO_EMAIL_REJECTED_MESSAGE);
   const h = await headers();
   const outcome = await authenticate(
     { email: input.email, password: input.password },
@@ -30,6 +41,7 @@ export const loginAction = withAction<never>(async (formData: FormData): Promise
 
 export const signupAction = withAction<never>(async (formData: FormData): Promise<ActionState<never>> => {
   const input = parseForm(signupSchema, formData);
+  if (isDemoEmail(input.email)) return fieldError("email", DEMO_EMAIL_REJECTED_MESSAGE);
   const h = await headers();
   const ip = clientIp(h);
 
@@ -57,4 +69,31 @@ export const signupAction = withAction<never>(async (formData: FormData): Promis
 export async function logoutAction(): Promise<void> {
   await clearSessionCookie();
   redirect("/login?reason=signed-out");
+}
+
+/**
+ * One-click demo profile (docs/M1_SPEC.md §6.9). Plain form action — usable as
+ * `<form action={demoLoginAction.bind(null, "ADMIN")}>` from the login page, the signup page and the landing page.
+ * Rate-limited per network (`demo:ip:<ip>`, 30 / 60 min), refreshes the plant when it is older than a day, creates
+ * it on first use, writes the LOGIN audit row "Demo sign-in (<role>)", sets the cookie and lands on /dashboard.
+ * Failures never surface a stack trace: they redirect back to /login with a `reason` the page renders as a banner.
+ */
+export async function demoLoginAction(role: Role): Promise<never> {
+  if (!isDemoRole(role)) redirect("/login");
+  const h = await headers();
+  const ip = clientIp(h);
+
+  const limit = await checkDemoRateLimit(ip);
+  if (limit.limited) redirect("/login?reason=demo-limited");
+
+  try {
+    await resetDemoPlantIfStale();
+    const { user, tenant } = await demoSignIn(role, { ip, userAgent: h.get("user-agent") });
+    await reissueSessionFor({ id: user.id, tenantId: tenant.id, role: user.role });
+  } catch (err) {
+    unstable_rethrow(err);
+    logger.error("demo sign-in failed", err);
+    redirect("/login?reason=demo-unavailable");
+  }
+  redirect("/dashboard");
 }

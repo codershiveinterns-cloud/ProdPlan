@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import { requireSession } from "@/lib/auth/guards";
+import { isDemoTenant, requireSession } from "@/lib/auth/guards";
 import { logoutAction } from "@/app/(auth)/actions";
+import { DemoBanner } from "./_components/DemoBanner";
 
 /**
  * Authenticated shell. `requireSession()` here only guarantees a valid session for the chrome; every page and
@@ -15,6 +16,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       user={{ name: session.user.name, email: session.user.email, role: session.user.role }}
       logoutAction={logoutAction}
     >
+      {isDemoTenant(session.tenant) ? <DemoBanner /> : null}
       {children}
     </AppShell>
   );

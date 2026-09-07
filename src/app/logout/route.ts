@@ -6,7 +6,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionCookieName, sessionCookieOptions } from "@/lib/auth/jwt";
 
-const REASONS = new Set(["revoked", "signed-out", "expired"]);
+const REASONS = new Set(["revoked", "signed-out", "expired", "demo-reset"]);
 
 function handle(req: NextRequest): NextResponse {
   const requested = req.nextUrl.searchParams.get("reason") ?? "signed-out";

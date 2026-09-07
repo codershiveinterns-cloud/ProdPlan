@@ -17,6 +17,7 @@ const RAW_PRISMA_ALLOWED = [
   "src/lib/db.ts",
   "src/lib/auth/**",
   "src/lib/rate-limit.ts",
+  "src/lib/demo/demo-plant.ts",
   "src/app/api/health/route.ts",
   "prisma/seed.ts",
   "tests/**",

@@ -7,12 +7,33 @@ import { forbidden, redirect } from "next/navigation";
 import { can, type Permission } from "@/lib/rbac";
 import { ForbiddenError } from "@/lib/errors";
 import { tenantDb, type TenantDb } from "@/lib/db";
-import { getSession, readSessionClaims, renewSessionIfNeeded, type Session } from "@/lib/auth/session";
+import { getSession, readSessionClaims, renewSessionIfNeeded, type Session, type SessionTenant } from "@/lib/auth/session";
 
 export type { Session, SessionTenant } from "@/lib/auth/session";
 
 /** Request header set by `src/proxy.ts` with the original `pathname + search`. */
 export const PATHNAME_HEADER = "x-pp-pathname";
+
+/** Slug of the shared demo plant (docs/M1_SPEC.md §6.9). Defined here so guards stay free of the demo module. */
+export const DEMO_TENANT_SLUG = "demo";
+
+/**
+ * Permissions that are refused inside the demo plant even for its ADMIN, so one visitor cannot lock the others out
+ * (spec §6.9: no Settings › Users, no tenant name/timezone changes). Everything else is fully usable.
+ */
+export const DEMO_LOCKED_PERMISSIONS: ReadonlySet<Permission> = new Set<Permission>(["users:manage", "tenant:manage"]);
+
+export const DEMO_LOCKED_MESSAGE = "This is the shared demo plant: team and plant settings are locked. Create your own workspace to manage them.";
+
+export function isDemoTenant(tenant: Pick<SessionTenant, "slug">): boolean {
+  return tenant.slug === DEMO_TENANT_SLUG;
+}
+
+/** True when `permission` is available to `role` in `tenant` (the demo plant hides users:manage / tenant:manage). */
+export function canInTenant(role: Session["user"]["role"], tenant: Pick<SessionTenant, "slug">, permission: Permission): boolean {
+  if (isDemoTenant(tenant) && DEMO_LOCKED_PERMISSIONS.has(permission)) return false;
+  return can(role, permission);
+}
 
 export type RequireSessionOptions = {
   /**
@@ -83,6 +104,9 @@ export async function requirePermission(
   const session = await requireSession(opts);
   if (!can(session.user.role, permission)) {
     throw new ForbiddenError();
+  }
+  if (isDemoTenant(session.tenant) && DEMO_LOCKED_PERMISSIONS.has(permission)) {
+    throw new ForbiddenError(DEMO_LOCKED_MESSAGE);
   }
   return { session, db: tenantDb(session.tenant.id) };
 }

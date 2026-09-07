@@ -242,3 +242,155 @@ html:has(.marketing) {
 @utility font-display {
   font-family: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
+
+/*
+ * ---------------------------------------------------------------------------------------------------------------
+ * Landing page v2 motion & texture (docs/LANDING_REFERENCE.md §1 motion catalogue, §3, §4). Appended by the
+ * landing rebuild; everything is scoped to `.marketing` and is pure CSS (no animation library).
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+@keyframes marketing-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes marketing-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes marketing-float-in {
+  from { opacity: 0; transform: translate(12px, 16px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes marketing-pulse {
+  50% { opacity: 0.45; }
+}
+@keyframes marketing-ping {
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+.marketing .animate-fade-in {
+  animation: marketing-fade-in 0.5s ease-out both;
+}
+.marketing .animate-slide-up {
+  animation: marketing-slide-up 0.6s ease-out both;
+}
+.marketing .animate-float-in {
+  animation: marketing-float-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.marketing .animate-pulse-dot {
+  animation: marketing-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.marketing .animate-ping-dot {
+  animation: marketing-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.marketing .delay-100 { animation-delay: 100ms; }
+.marketing .delay-200 { animation-delay: 200ms; }
+.marketing .delay-300 { animation-delay: 300ms; }
+.marketing .delay-400 { animation-delay: 400ms; }
+.marketing .delay-600 { animation-delay: 600ms; }
+.marketing .delay-900 { animation-delay: 900ms; }
+
+/* Scroll reveal: toggled by the <Reveal> client component (IntersectionObserver → data-visible). */
+.marketing [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s ease-out,
+    transform 0.7s ease-out;
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.marketing [data-reveal][data-visible] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero ground: soft teal + amber glows over the dot grid (never IntakeIQ's line grid). */
+.marketing-hero-bg {
+  background-image:
+    radial-gradient(60rem 30rem at 12% -10%, rgb(15 118 110 / 0.1), transparent 60%),
+    radial-gradient(40rem 24rem at 95% 10%, rgb(251 191 36 / 0.14), transparent 60%),
+    radial-gradient(rgb(28 25 23 / 0.08) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    24px 24px;
+}
+.marketing-hero-fade {
+  background-image: linear-gradient(to bottom, transparent, var(--background));
+}
+
+/* Fixed header states (SiteHeader toggles data-scrolled after 8 px). */
+.marketing-header {
+  transition:
+    padding 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out;
+}
+.marketing-header[data-scrolled] {
+  box-shadow:
+    0 1px 2px rgb(28 25 23 / 0.04),
+    0 8px 24px rgb(28 25 23 / 0.06);
+}
+
+/* Warm card shadow + hover lift for cards and buttons (docs/LANDING_REFERENCE.md §4). */
+.marketing .lift {
+  transition:
+    transform 0.3s ease-out,
+    box-shadow 0.3s ease-out,
+    border-color 0.3s ease-out,
+    background-color 0.2s ease-out,
+    color 0.2s ease-out;
+}
+.marketing .lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 1px 2px rgb(28 25 23 / 0.04),
+    0 16px 40px rgb(28 25 23 / 0.1);
+}
+.marketing .lift-sm:hover {
+  transform: translateY(-2px);
+}
+.marketing .card-shadow {
+  box-shadow:
+    0 1px 2px rgb(28 25 23 / 0.04),
+    0 8px 24px rgb(28 25 23 / 0.06);
+}
+
+/* Feature tab panels cross-fade (250 ms). */
+.marketing [data-tabpanel] {
+  animation: marketing-fade-in 0.25s ease-out both;
+}
+
+/* Browser-chrome mockup frame: dark title bar in the tinted teal. */
+.marketing-chrome {
+  background-color: var(--band);
+  background-image: linear-gradient(160deg, #0b2b2a 0%, #123f3c 100%);
+}
+
+/* Reduced motion: no entrance transforms, no reveals, no infinite pulses. */
+@media (prefers-reduced-motion: reduce) {
+  .marketing .animate-fade-in,
+  .marketing .animate-slide-up,
+  .marketing .animate-float-in,
+  .marketing .animate-pulse-dot,
+  .marketing .animate-ping-dot,
+  .marketing [data-tabpanel] {
+    animation: none;
+  }
+  .marketing [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .marketing .lift,
+  .marketing .lift:hover,
+  .marketing .lift-sm:hover {
+    transform: none;
+    transition: none;
+  }
+  .marketing-header {
+    transition: none;
+  }
+}

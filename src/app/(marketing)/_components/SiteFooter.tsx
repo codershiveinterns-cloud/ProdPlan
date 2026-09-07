@@ -1,74 +1,68 @@
 import { FOOTER, SITE } from "../_lib/content";
-import { BrandLockup, Container, TextLink } from "./ui";
+import { BrandLockup, Container } from "./ui";
 
-/**
- * Dark-band footer (brief §6.9). Only real destinations are linked: documentation, contact and legal pages are
- * omitted until the client supplies URLs — never a placeholder link.
- */
+/** Dark footer: brand column, Product, Company, Account; copyright row. Only real destinations are linked. */
 export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number }) {
-  const linkClass = "inline-flex min-h-11 items-center py-2 text-sm";
+  const heading = "text-[11px] font-semibold tracking-[0.14em] text-(--band-subtle) uppercase";
+  const link =
+    "inline-flex min-h-9 items-center rounded-sm text-sm text-(--band-muted) outline-none transition-colors hover:text-white focus-visible:ring-3 focus-visible:ring-white/40";
+
+  const account = signedIn
+    ? [{ label: "Open dashboard", href: "/dashboard" }]
+    : [
+        { label: "Sign in", href: "/login" },
+        { label: "Create your workspace", href: "/signup" },
+      ];
+
   return (
-    <footer className="marketing-band text-(--band-foreground)">
-      <Container className="py-14">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <footer className="bg-[#07201f] text-white">
+      <Container className="py-14 sm:py-16">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
-            <BrandLockup href="/" mono className="-ml-1 text-white" />
-            <p className="mt-3 text-sm leading-relaxed text-(--band-muted)">{SITE.tagline}</p>
+            <BrandLockup href="/" mono tagline={SITE.tagline} className="-ml-1 text-white" />
+            <p className="mt-4 text-sm leading-relaxed text-(--band-muted)">{FOOTER.blurb}</p>
           </div>
 
           <nav aria-labelledby="footer-product">
-            <h2 id="footer-product" className="text-xs font-semibold tracking-[0.08em] text-(--band-subtle) uppercase">
+            <h2 id="footer-product" className={heading}>
               Product
             </h2>
-            <ul className="mt-2 flex flex-col">
-              {FOOTER.product.map((link) => (
-                <li key={link.href}>
-                  <TextLink href={link.href} tone="dark" className={linkClass}>
-                    {link.label}
-                  </TextLink>
+            <ul className="mt-3 flex flex-col">
+              {FOOTER.product.map((l) => (
+                <li key={l.label}>
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <nav aria-labelledby="footer-company">
+            <h2 id="footer-company" className={heading}>
+              Company
+            </h2>
+            <ul className="mt-3 flex flex-col">
+              {FOOTER.company.map((l) => (
+                <li key={l.label}>
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
           </nav>
 
           <nav aria-labelledby="footer-account">
-            <h2 id="footer-account" className="text-xs font-semibold tracking-[0.08em] text-(--band-subtle) uppercase">
+            <h2 id="footer-account" className={heading}>
               Account
             </h2>
-            <ul className="mt-2 flex flex-col">
-              {signedIn ? (
-                <li>
-                  <TextLink href="/dashboard" tone="dark" className={linkClass}>
-                    Open dashboard
-                  </TextLink>
-                </li>
-              ) : (
-                <>
-                  <li>
-                    <TextLink href="/login" tone="dark" className={linkClass}>
-                      Sign in
-                    </TextLink>
-                  </li>
-                  <li>
-                    <TextLink href="/signup" tone="dark" className={linkClass}>
-                      Create workspace
-                    </TextLink>
-                  </li>
-                </>
-              )}
-            </ul>
-          </nav>
-
-          <nav aria-labelledby="footer-resources">
-            <h2 id="footer-resources" className="text-xs font-semibold tracking-[0.08em] text-(--band-subtle) uppercase">
-              Resources
-            </h2>
-            <ul className="mt-2 flex flex-col">
-              {FOOTER.resources.map((link) => (
-                <li key={link.href}>
-                  <TextLink href={link.href} tone="dark" className={linkClass}>
-                    {link.label}
-                  </TextLink>
+            <ul className="mt-3 flex flex-col">
+              {account.map((l) => (
+                <li key={l.label}>
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -76,10 +70,8 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
         </div>
 
         <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-(--band-subtle) sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {year} {SITE.name}. {SITE.tagline}
-          </p>
-          <p>{FOOTER.builtWith}</p>
+          <p>© {year} ProdPlan. All rights reserved.</p>
+          <p>Production planning for discrete manufacturers.</p>
         </div>
       </Container>
     </footer>

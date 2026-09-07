@@ -1,37 +1,48 @@
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
-import { FINAL_CTA, HERO } from "../../_lib/content";
-import { Container, CtaLink } from "../ui";
+import { FINAL_CTA } from "../../_lib/content";
+import { Reveal } from "../Reveal";
+import { Container, CtaLink, Pill } from "../ui";
 
-/** Closing band (brief §6.8) on the dark tokens; repeats the primary action. */
+/** Dark final CTA band (reference section 9): pill, H2, paragraph, amber primary + outline-on-dark, three ✓ items. */
 export function FinalCta({ signedIn }: { signedIn: boolean }) {
   return (
-    <section aria-labelledby="final-title" className="marketing-band py-16 text-(--band-foreground) sm:py-20">
-      <Container>
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
-          <h2 id="final-title" className="text-[1.75rem] leading-[1.1] font-bold tracking-[-0.02em] md:text-4xl">
+    <section aria-labelledby="cta-title" className="marketing-band relative overflow-hidden py-20 text-white sm:py-28">
+      <div aria-hidden="true" className="absolute -top-40 left-1/2 h-80 w-[40rem] -translate-x-1/2 rounded-full bg-teal-400/10 blur-3xl" />
+      <Container className="relative">
+        <Reveal className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <Pill tone="dark">{FINAL_CTA.pill}</Pill>
+          <h2 id="cta-title" className="mt-5 text-3xl leading-[1.1] font-extrabold tracking-[-0.025em] sm:text-4xl lg:text-5xl">
             {FINAL_CTA.headline}
           </h2>
-          <p className="max-w-[55ch] text-lg leading-relaxed text-pretty text-(--band-muted) md:text-xl">{FINAL_CTA.line}</p>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <p className="mt-5 max-w-[56ch] text-lg leading-relaxed text-pretty text-(--band-muted) sm:text-xl">{FINAL_CTA.line}</p>
+          <div className="mt-9 flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
             {signedIn ? (
-              <CtaLink href="/dashboard" variant="band-primary">
-                {HERO.signedInCta}
+              <CtaLink href="/dashboard" variant="band-primary" className="w-full sm:w-auto">
+                Open dashboard
                 <ArrowRight aria-hidden="true" />
               </CtaLink>
             ) : (
               <>
-                <CtaLink href="/signup" variant="band-primary">
-                  {HERO.primaryCta}
+                <CtaLink href="/signup" variant="band-primary" className="w-full sm:w-auto">
+                  {FINAL_CTA.primary}
                   <ArrowRight aria-hidden="true" />
                 </CtaLink>
-                <CtaLink href="/login" variant="band-outline">
-                  Sign in
+                <CtaLink href="/login" variant="band-outline" className="w-full sm:w-auto">
+                  {FINAL_CTA.secondary}
                 </CtaLink>
               </>
             )}
           </div>
-        </div>
+          <ul className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-(--band-muted)">
+            {FINAL_CTA.checks.map((c) => (
+              <li key={c} className="inline-flex items-center gap-2">
+                <Check aria-hidden="true" className="size-4 text-(--band-accent)" strokeWidth={3} />
+                {c}
+              </li>
+            ))}
+          </ul>
+        </Reveal>
       </Container>
     </section>
   );
