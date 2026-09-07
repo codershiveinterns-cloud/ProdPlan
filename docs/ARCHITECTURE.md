@@ -1,4 +1,4 @@
-# ProdPlan — Architecture (Milestone 1)
+# ProdPlan — Architecture
 
 ## 1. Overview
 
@@ -29,7 +29,7 @@ Browser ──HTTPS──▶ Next.js (proxy.ts → Server Components / Server Ac
   composite FK mixing a required and an optional column).
 * Raw SQL is forbidden outside migrations/tests (ESLint rule); the raw `prisma` client may only be imported by the
   auth layer, rate limiting, the health route, the seed and tests (ESLint rule + unit test).
-* Postgres Row-Level Security is **deferred to M3 hardening**: because all access flows through `tenantDb()`, RLS can
+* Postgres Row-Level Security is **deferred to a later hardening pass**: because all access flows through `tenantDb()`, RLS can
   be added inside that extension (SET LOCAL per transaction) without touching module code.
 * Integration tests (`tests/integration/tenant-isolation.test.ts`) create two tenants and assert that no operation
   class can read, update, delete, count or re-parent another tenant's rows.
@@ -80,23 +80,23 @@ and calendar dates cross the app boundary as `YYYY-MM-DD` strings.
 * Design system: Tailwind v4 tokens in `globals.css`, shadcn/ui (Radix) primitives at 44 px density, shared data
   components (`DataTable` with responsive column priorities, badges with fixed colour semantics, `EmptyState`).
 
-## 6. How Milestone 2 and 3 plug in (no redesign needed)
+## 6. How future capabilities plug in (no redesign needed)
 
-| Milestone | Addition | Where it attaches |
+| Capability | Addition | Where it attaches |
 |---|---|---|
-| M2 scheduling engine | `OrderOperation`/`ScheduleEntry` rows (order × routing step → machine, planned start/end, status) and `MaterialReservation` | Uses `ProductOperation` routing, `Machine` + `ShiftCalendar` capacity (`src/lib/calendar.ts availableMinutes`), `Order.priority/dueDate/earliestStartDate`, BOM maths in `src/lib/bom.ts` |
-| M2 planning board | Gantt over `ScheduleEntry` per machine per day; drag-to-reschedule mutates entries via scoped actions | Reuses the app shell, badges, tenant timezone helpers |
-| M2 status tracking | Per-operation statuses roll up into the existing `Order.status` state machine | `src/lib/orders/status.ts` |
-| M2 notifications | `Notification` model (tenant-scoped) + in-app inbox | Same `tenantDb()` scoping; add the model to `TENANT_SCOPED_MODELS` (a unit test enforces this) |
-| M3 AI optimisation / shortage prediction | Reads open orders, capacity, stock, `reorderLeadTimeDays`; writes suggestions | Pure functions next to `bom.ts`/`calendar.ts`; LLM calls in a server-only module |
-| M3 analytics, exports, email | Aggregates over `Order`, `StockMovement`, `DowntimeWindow`, `AuditLog`; CSV via `src/lib/csv.ts` (formula-injection safe); PDF via a server renderer | Existing audit rows already carry actor snapshots and summaries |
-| M3 billing (future scope) | `Subscription` on `Tenant`; feature gates in `requirePermission()` | Tenant-level, no data-model changes elsewhere |
+| Scheduling engine | `OrderOperation`/`ScheduleEntry` rows (order × routing step → machine, planned start/end, status) and `MaterialReservation` | Uses `ProductOperation` routing, `Machine` + `ShiftCalendar` capacity (`src/lib/calendar.ts availableMinutes`), `Order.priority/dueDate/earliestStartDate`, BOM maths in `src/lib/bom.ts` |
+| Planning board | Gantt over `ScheduleEntry` per machine per day; drag-to-reschedule mutates entries via scoped actions | Reuses the app shell, badges, tenant timezone helpers |
+| Operation-level status tracking | Per-operation statuses roll up into the existing `Order.status` state machine | `src/lib/orders/status.ts` |
+| Notifications | `Notification` model (tenant-scoped) + in-app inbox | Same `tenantDb()` scoping; add the model to `TENANT_SCOPED_MODELS` (a unit test enforces this) |
+| AI optimisation / shortage prediction | Reads open orders, capacity, stock, `reorderLeadTimeDays`; writes suggestions | Pure functions next to `bom.ts`/`calendar.ts`; LLM calls in a server-only module |
+| Analytics, exports, email | Aggregates over `Order`, `StockMovement`, `DowntimeWindow`, `AuditLog`; CSV via `src/lib/csv.ts` (formula-injection safe); PDF via a server renderer | Existing audit rows already carry actor snapshots and summaries |
+| Billing | `Subscription` on `Tenant`; feature gates in `requirePermission()` | Tenant-level, no data-model changes elsewhere |
 
 ## 7. Operational notes
 
 * Local dev: project-owned Postgres (`scripts/db-local.sh`), `.env`. Staging: Netlify + Netlify Database, migrations
-  applied from `prisma/migrations` at deploy time. Production (M3): Docker Compose on a VPS (`Dockerfile`,
+  applied from `prisma/migrations` at deploy time. Production: Docker Compose on a VPS (`Dockerfile`,
   `docker-compose.yml`). See `DEPLOYMENT.md`.
 * Health: `GET /api/health` reports DB connectivity and schema presence without leaking configuration.
-* Security decisions recorded for M3: RLS deferral, `__Host-` cookies, rate-limit buckets, dummy-hash timing
+* Security decisions recorded for the next hardening pass: RLS deferral, `__Host-` cookies, rate-limit buckets, dummy-hash timing
   equalisation, temp-password forced change, last-admin transactional guard, CSV formula-injection guard.
