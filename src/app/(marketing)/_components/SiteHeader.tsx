@@ -8,7 +8,7 @@ import { BrandLockup, CtaLink } from "./ui";
  */
 export function SiteHeader({ signedIn }: { signedIn: boolean }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-backdrop-filter:bg-background/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <BrandLockup href="/" className="-ml-1" />
 
@@ -17,7 +17,7 @@ export function SiteHeader({ signedIn }: { signedIn: boolean }) {
             <a
               key={link.href}
               href={link.href}
-              className="inline-flex h-11 items-center rounded-lg px-3 text-sm font-medium text-slate-700 outline-none transition-colors duration-150 hover:bg-muted hover:text-slate-900 focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="inline-flex h-11 items-center rounded-lg px-3 text-sm font-medium text-stone-700 outline-none transition-colors duration-150 hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {link.label}
             </a>

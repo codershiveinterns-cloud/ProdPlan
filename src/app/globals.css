@@ -3,8 +3,9 @@
 @import "shadcn/tailwind.css";
 
 /*
- * ProdPlan visual system (M1: light theme only).
- * Neutral slate surfaces, one indigo accent for primary actions, semantic colours per docs/M1_SPEC.md §5.
+ * ProdPlan visual system (M1: light theme only) — docs/DESIGN_BRIEF.md §3 (palette v2) and
+ * docs/LANDING_REFERENCE.md §4: warm stone neutrals, a deep teal primary, an amber brand highlight and the
+ * semantic colours from docs/M1_SPEC.md §5 (badges keep their fixed meanings).
  * shadcn variable names are kept so the generated ui/* components keep working unchanged.
  * The `dark` variant is class-based and never activated in M1 (no `.dark` token block is defined).
  */
@@ -15,7 +16,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  --font-heading: var(--font-sans);
+  /* Display family (Manrope, loaded in src/app/layout.tsx) for page titles, card titles and landing headings. */
+  --font-heading: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -46,6 +48,12 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* Brand additions (brief §3): solid hover for primary surfaces, the tinted primary surface, the amber highlight. */
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-ink: var(--brand-accent-ink);
   /* Semantic colours (spec §5 "Colour semantics"). Badges use the Tailwind palette directly; these tokens are for
      surfaces such as StatCard tones, row tints and alerts. */
   --color-success: var(--success);
@@ -68,33 +76,42 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces: slate-50 page ground, white cards/popovers. */
-  --background: oklch(0.984 0.003 247.858);
-  --foreground: oklch(0.208 0.042 265.755);
+  /* Surfaces: stone-50 page ground, white cards/popovers, stone-900 text (16.7:1 on the ground). */
+  --background: oklch(0.985 0.001 106.423);
+  --foreground: oklch(0.216 0.006 56.043);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.208 0.042 265.755);
+  --card-foreground: oklch(0.216 0.006 56.043);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: oklch(0.216 0.006 56.043);
 
-  /* Accent: indigo-600 for primary actions only. */
-  --primary: oklch(0.511 0.262 276.966);
+  /* Accent: teal-700 for primary actions (white on it 5.47:1); teal-800 as the solid hover. */
+  --primary: oklch(0.511 0.096 186.391);
   --primary-foreground: oklch(1 0 0);
+  --primary-hover: oklch(0.437 0.078 188.216);
+  --primary-soft: oklch(0.984 0.014 180.72);
+  --primary-soft-foreground: oklch(0.386 0.063 188.416);
 
-  --secondary: oklch(0.929 0.013 255.508);
-  --secondary-foreground: oklch(0.279 0.041 260.031);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  /* Brand highlight: amber-400 for fills/marks, amber-700 for amber text on white (5.0:1). Never as text on white. */
+  --brand-accent: oklch(0.828 0.189 84.429);
+  --brand-accent-ink: oklch(0.555 0.163 48.998);
+
+  /* Neutrals: stone-200 secondary, stone-100 muted/hover surface, stone-600 muted text (7.3:1 on the ground). */
+  --secondary: oklch(0.923 0.003 48.717);
+  --secondary-foreground: oklch(0.268 0.007 34.298);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.444 0.011 73.639);
+  --accent: oklch(0.97 0.001 106.424);
+  --accent-foreground: oklch(0.216 0.006 56.043);
 
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
 
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.869 0.022 252.894);
-  --ring: oklch(0.585 0.233 277.117);
+  /* stone-200 dividers, stone-300 input borders, teal-600 focus ring. */
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.869 0.005 56.366);
+  --ring: oklch(0.6 0.118 184.704);
 
-  --chart-1: oklch(0.511 0.262 276.966);
+  --chart-1: oklch(0.511 0.096 186.391);
   --chart-2: oklch(0.546 0.245 262.881);
   --chart-3: oklch(0.627 0.194 149.214);
   --chart-4: oklch(0.769 0.188 70.08);
@@ -102,17 +119,17 @@
 
   --radius: 0.5rem;
 
-  /* Sidebar: white rail, indigo active item. */
+  /* Sidebar: white rail, stone-700 items, teal-50 active item with teal-900 text. */
   --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.372 0.044 257.287);
-  --sidebar-primary: oklch(0.511 0.262 276.966);
+  --sidebar-foreground: oklch(0.374 0.01 67.558);
+  --sidebar-primary: oklch(0.511 0.096 186.391);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.962 0.018 272.314);
-  --sidebar-accent-foreground: oklch(0.457 0.24 277.023);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.585 0.233 277.117);
+  --sidebar-accent: oklch(0.984 0.014 180.72);
+  --sidebar-accent-foreground: oklch(0.386 0.063 188.416);
+  --sidebar-border: oklch(0.923 0.003 48.717);
+  --sidebar-ring: oklch(0.6 0.118 184.704);
 
-  /* Semantic */
+  /* Semantic (spec §5, unchanged by the v2 palette) */
   --success: oklch(0.627 0.194 149.214);
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.666 0.179 58.318);
@@ -171,28 +188,30 @@
 
 /*
  * ---------------------------------------------------------------------------------------------------------------
- * Landing page (src/app/(marketing)/**) — docs/DESIGN_BRIEF.md §3.2, §5.
- * Scoped to `.marketing` so nothing here leaks into the app. Tokens are the brief's landing-only additions; the
- * heading font switches to Manrope (`--font-display`, loaded by the marketing layout) with Inter as the fallback.
+ * Landing page (src/app/(marketing)/**) — docs/LANDING_REFERENCE.md §4, docs/DESIGN_BRIEF.md §5.
+ * Scoped to `.marketing` so nothing here leaks into the app. The dark band is the tinted-teal gradient with a
+ * faint dot grid; the light sections reuse the app tokens.
  * ---------------------------------------------------------------------------------------------------------------
  */
 .marketing {
-  --primary-hover: oklch(0.457 0.24 277.023); /* indigo-700 #4338ca — white on it 7.90:1 */
-  --primary-soft: oklch(0.962 0.018 272.314); /* indigo-50  #eef2ff */
-  --brand-accent: oklch(0.828 0.189 84.429); /* amber-400  #fbbf24 — graphics only, never text on white */
-  --brand-accent-ink: oklch(0.555 0.163 48.998); /* amber-700  #b45309 — accent text on white 5.02:1 */
-  --band: oklch(0.208 0.042 265.755); /* slate-900  #0f172a — dark band (roadmap, final CTA, footer) */
-  --band-foreground: #ffffff; /* 17.9:1 */
-  --band-muted: oklch(0.869 0.022 252.894); /* slate-300  #cbd5e1 — 12.0:1 on band */
-  --band-subtle: oklch(0.704 0.04 256.788); /* slate-400  #94a3b8 — 6.96:1 on band (small print) */
-  --band-link: oklch(0.785 0.115 274.713); /* indigo-300 #a5b4fc — 8.96:1 on band */
-  --band-accent: oklch(0.828 0.189 84.429); /* amber-400 — 10.7:1 on band */
-  --font-heading: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --band: #0b2b2a; /* tinted teal — dark band (final CTA, footer, side card) */
+  --band-end: #0f3d3a;
+  --band-foreground: #ffffff; /* 15:1 */
+  --band-muted: oklch(0.91 0.096 180.426); /* teal-200 #99f6e4 — 12:1 on band */
+  --band-subtle: oklch(0.76 0.045 185); /* desaturated teal-grey — 6.9:1 on band (small print) */
+  --band-link: oklch(0.91 0.096 180.426); /* teal-200 — links on the band */
+  --band-accent: oklch(0.828 0.189 84.429); /* amber-400 — 9:1 on band */
 }
 
-/* `font-heading` is compiled inline to `var(--font-sans)`, so headings need the display family set explicitly. */
-.marketing :is(h1, h2, h3, h4) {
-  font-family: var(--font-heading);
+/* Dark band surface: gradient + dot grid, the only texture allowed on the page. */
+.marketing-band {
+  background-color: var(--band);
+  background-image:
+    radial-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(160deg, var(--band) 0%, var(--band-end) 100%);
+  background-size:
+    24px 24px,
+    100% 100%;
 }
 
 /* Sticky 64 px header: anchor targets and smooth scrolling (only when motion is allowed). */
@@ -205,9 +224,9 @@ html:has(.marketing) {
   }
 }
 
-/* The one allowed decorative element: a faint dotted grid behind the hero mockup. */
+/* The one allowed decorative element on light sections: a faint dotted grid behind the hero mockup. */
 .marketing-dot-grid {
-  background-image: radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgb(28 25 23 / 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
@@ -248,7 +267,7 @@ html:has(.marketing) {
   display: none;
 }
 
-/* Display family as a utility for non-heading display text (hero KPI values, roadmap numerals). */
+/* Display family as a utility for non-heading display text (hero KPI values, step numerals). */
 @utility font-display {
   font-family: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }

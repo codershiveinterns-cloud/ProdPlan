@@ -62,7 +62,7 @@ export default function OpenGraphImage() {
 
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 22, color: SLATE_400 }}>
           <div style={{ display: "flex" }}>Production planning for discrete manufacturers</div>
-          <div style={{ display: "flex" }}>Milestone 1 preview</div>
+          <div style={{ display: "flex" }}>Production planning for discrete manufacturers</div>
         </div>
       </div>
     ),

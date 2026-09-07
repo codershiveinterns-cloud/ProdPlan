@@ -18,7 +18,7 @@ export function Section({ className, ...props }: ComponentProps<"section">) {
   return <section className={cn("scroll-mt-20 py-16 sm:py-20 lg:py-24", className)} {...props} />;
 }
 
-/** 12 px uppercase label on an indigo-50 chip (7.07:1) or as plain slate-600 text. */
+/** 12 px uppercase label on a teal-50 chip (teal-900 text, 9.1:1) or as plain muted text. */
 export function Eyebrow({
   children,
   chip = true,
@@ -32,7 +32,7 @@ export function Eyebrow({
     <span
       className={cn(
         "inline-flex max-w-full items-center text-[11px] leading-4 font-semibold tracking-[0.08em] uppercase sm:text-xs",
-        chip ? "min-h-7 rounded-full bg-(--primary-soft) px-2.5 py-1 text-center text-indigo-700 sm:px-3" : "text-slate-600",
+        chip ? "min-h-7 rounded-full bg-(--primary-soft) px-2.5 py-1 text-center text-primary-soft-foreground sm:px-3" : "text-muted-foreground",
         className,
       )}
     >
@@ -77,13 +77,13 @@ export function SectionHeader({
         id={id}
         className={cn(
           "text-[1.75rem] leading-[1.1] font-bold tracking-[-0.02em] md:text-4xl",
-          dark ? "text-(--band-foreground)" : "text-slate-900",
+          dark ? "text-(--band-foreground)" : "text-foreground",
         )}
       >
         {title}
       </h2>
       {lead ? (
-        <p className={cn("max-w-[60ch] text-lg leading-relaxed text-pretty md:text-xl", dark ? "text-(--band-muted)" : "text-slate-600")}>
+        <p className={cn("max-w-[60ch] text-lg leading-relaxed text-pretty md:text-xl", dark ? "text-(--band-muted)" : "text-muted-foreground")}>
           {lead}
         </p>
       ) : null}
@@ -104,10 +104,10 @@ const CTA_SIZE: Record<CtaSize, string> = {
 
 const CTA_VARIANT: Record<CtaVariant, string> = {
   primary: "bg-primary text-primary-foreground shadow-xs hover:bg-(--primary-hover)",
-  outline: "border border-input bg-card text-slate-900 shadow-xs hover:bg-muted",
-  ghost: "text-slate-700 hover:bg-muted hover:text-slate-900",
-  "band-primary": "bg-white text-slate-900 shadow-xs hover:bg-slate-100",
-  "band-outline": "border border-slate-500 text-white hover:bg-white/10 focus-visible:ring-white/40",
+  outline: "border border-input bg-card text-foreground shadow-xs hover:bg-muted",
+  ghost: "text-stone-700 hover:bg-muted hover:text-foreground",
+  "band-primary": "bg-white text-foreground shadow-xs hover:bg-muted",
+  "band-outline": "border border-white/40 text-white hover:bg-white/10 focus-visible:ring-white/40",
 };
 
 /**
@@ -143,7 +143,7 @@ export function CtaLink({
   );
 }
 
-/** Inline text link: indigo-600 on light surfaces, indigo-300 on the dark band. */
+/** Inline text link: teal-700 on light surfaces, teal-200 on the dark band. */
 export function TextLink({
   href,
   tone = "light",
@@ -158,7 +158,7 @@ export function TextLink({
 } & Omit<ComponentProps<"a">, "href" | "className" | "children">) {
   const classes = cn(
     "rounded-sm font-medium underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50",
-    tone === "dark" ? "text-(--band-link)" : "text-indigo-600",
+    tone === "dark" ? "text-(--band-link)" : "text-primary",
     className,
   );
   if (href.startsWith("#") || href.startsWith("/api/")) {
@@ -195,7 +195,7 @@ export function BrandMark({
       focusable="false"
       className={cn("shrink-0", className)}
     >
-      {mono ? null : <rect width="32" height="32" rx="8" fill="#4f46e5" />}
+      {mono ? null : <rect width="32" height="32" rx="8" fill="#0f766e" />}
       <rect x="7" y="7" width="12" height="4" rx="1.25" fill={mono ? "currentColor" : "#ffffff"} />
       <rect x="10" y="14" width="15" height="4" rx="1.25" fill={mono ? "currentColor" : "#ffffff"} />
       <rect x="13" y="21" width="6" height="4" rx="1.25" fill={mono ? "currentColor" : "#ffffff"} />
@@ -232,7 +232,7 @@ export function BrandLockup({
       )}
     >
       <BrandMark size={32} mono={mono} />
-      <span className={cn("text-[21px] font-semibold tracking-[-0.5px]", mono ? "text-current" : "text-slate-900")}>
+      <span className={cn("text-[21px] font-semibold tracking-[-0.5px]", mono ? "text-current" : "text-foreground")}>
         ProdPlan
       </span>
     </Link>
@@ -242,16 +242,16 @@ export function BrandLockup({
 /** Square icon chip used by proof points, steps and feature cards. */
 export function IconChip({
   children,
-  tone = "indigo",
+  tone = "primary",
   className,
 }: {
   children: ReactNode;
-  tone?: "indigo" | "slate" | "amber" | "red" | "blue" | "green";
+  tone?: "primary" | "slate" | "amber" | "red" | "blue" | "green";
   className?: string;
 }) {
   const tones: Record<NonNullable<typeof tone>, string> = {
-    indigo: "bg-(--primary-soft) text-indigo-700",
-    slate: "bg-slate-100 text-slate-600",
+    primary: "bg-primary-soft text-primary-soft-foreground",
+    slate: "bg-muted text-stone-600",
     amber: "bg-amber-50 text-amber-700",
     red: "bg-red-50 text-red-700",
     blue: "bg-blue-50 text-blue-700",

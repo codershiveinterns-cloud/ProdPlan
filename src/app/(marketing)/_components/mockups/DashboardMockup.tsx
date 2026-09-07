@@ -62,18 +62,18 @@ export function DashboardMockup({ className }: { className?: string }) {
     >
       <div className="flex min-h-[26rem]">
         {/* Sidebar */}
-        <div className="hidden w-40 shrink-0 flex-col border-r border-slate-200 bg-white @2xl:flex">
-          <div className="flex h-12 items-center gap-2 border-b border-slate-200 px-3">
+        <div className="hidden w-40 shrink-0 flex-col border-r border-border bg-white @2xl:flex">
+          <div className="flex h-12 items-center gap-2 border-b border-border px-3">
             <BrandMark size={24} />
             <div className="min-w-0 leading-tight">
-              <div className="text-xs font-semibold text-slate-900">ProdPlan</div>
-              <div className="truncate text-[10px] text-slate-500">Acme Precision Works</div>
+              <div className="text-xs font-semibold text-foreground">ProdPlan</div>
+              <div className="truncate text-[10px] text-stone-500">Acme Precision Works</div>
             </div>
           </div>
           <div className="flex flex-col gap-3 px-2 py-3">
             {NAV.map((group) => (
               <div key={group.group}>
-                <div className="px-2 pb-1 text-[9px] font-semibold tracking-wider text-slate-500 uppercase">{group.group}</div>
+                <div className="px-2 pb-1 text-[9px] font-semibold tracking-wider text-stone-500 uppercase">{group.group}</div>
                 <ul className="flex flex-col gap-0.5">
                   {group.items.map((item) => {
                     const Icon = item.icon;
@@ -83,10 +83,10 @@ export function DashboardMockup({ className }: { className?: string }) {
                         key={item.label}
                         className={cn(
                           "flex h-7 items-center gap-2 rounded-md px-2 text-[11px] font-medium",
-                          active ? "bg-indigo-50 text-indigo-700" : "text-slate-700",
+                          active ? "bg-primary-soft text-primary-soft-foreground" : "text-stone-700",
                         )}
                       >
-                        <Icon className={cn("size-3.5 shrink-0", active ? "text-indigo-600" : "text-slate-400")} />
+                        <Icon className={cn("size-3.5 shrink-0", active ? "text-primary" : "text-stone-400")} />
                         <span className="truncate">{item.label}</span>
                       </li>
                     );
@@ -99,18 +99,18 @@ export function DashboardMockup({ className }: { className?: string }) {
 
         {/* Main column */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <div className="flex h-12 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 @md:px-4">
+          <div className="flex h-12 items-center justify-between gap-3 border-b border-border bg-white px-3 @md:px-4">
             <div className="flex min-w-0 items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-md bg-slate-100 @2xl:hidden">
-                <span className="block h-0.5 w-3.5 rounded bg-slate-500 shadow-[0_-4px_0_0_#64748b,0_4px_0_0_#64748b]" />
+              <span className="flex size-7 items-center justify-center rounded-md bg-muted @2xl:hidden">
+                <span className="block h-0.5 w-3.5 rounded bg-stone-500 shadow-[0_-4px_0_0_#78716c,0_4px_0_0_#78716c]" />
               </span>
-              <span className="truncate text-xs font-semibold text-slate-900">Acme Precision Works</span>
+              <span className="truncate text-xs font-semibold text-foreground">Acme Precision Works</span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <span className="inline-flex h-7 items-center rounded-md bg-indigo-600 px-2.5 text-[11px] font-medium text-white">
+              <span className="inline-flex h-7 items-center rounded-md bg-primary px-2.5 text-[11px] font-medium text-white">
                 + New
               </span>
-              <span className="flex size-7 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-semibold text-indigo-700">
+              <span className="flex size-7 items-center justify-center rounded-full bg-teal-100 text-[10px] font-semibold text-teal-900">
                 AR
               </span>
             </div>
@@ -118,8 +118,8 @@ export function DashboardMockup({ className }: { className?: string }) {
 
           <div className="flex flex-1 flex-col gap-3 p-3 @md:p-4">
             <div>
-              <div className="text-base leading-6 font-semibold text-slate-900">Dashboard</div>
-              <div className="text-[11px] text-slate-500">Monday, 07 Sep 2026 · Asia/Kolkata</div>
+              <div className="text-base leading-6 font-semibold text-foreground">Dashboard</div>
+              <div className="text-[11px] text-stone-500">Monday, 07 Sep 2026 · Asia/Kolkata</div>
             </div>
 
             <div className="grid grid-cols-2 gap-2 @lg:grid-cols-4 @md:gap-3">
@@ -131,8 +131,8 @@ export function DashboardMockup({ className }: { className?: string }) {
 
             <MockCard>
               <div className="flex items-center justify-between gap-2 px-3 py-2">
-                <span className="text-xs font-semibold text-slate-900">Orders by due date</span>
-                <span className="text-[11px] font-medium text-indigo-600">View all 24</span>
+                <span className="text-xs font-semibold text-foreground">Orders by due date</span>
+                <span className="text-[11px] font-medium text-primary">View all 24</span>
               </div>
               <MockTable
                 head={
@@ -152,9 +152,9 @@ export function DashboardMockup({ className }: { className?: string }) {
                     <td>
                       <Code>{o.no}</Code>
                     </td>
-                    <td className="hidden text-slate-700 @lg:table-cell">{o.customer}</td>
-                    <td className="hidden max-w-[11rem] truncate text-slate-700 @4xl:table-cell">{o.product}</td>
-                    <td className="hidden text-right text-slate-900 @sm:table-cell">{o.qty}</td>
+                    <td className="hidden text-stone-700 @lg:table-cell">{o.customer}</td>
+                    <td className="hidden max-w-[11rem] truncate text-stone-700 @4xl:table-cell">{o.product}</td>
+                    <td className="hidden text-right text-foreground @sm:table-cell">{o.qty}</td>
                     <td>
                       <Due tone={o.dueTone}>{o.due}</Due>
                     </td>
@@ -172,10 +172,10 @@ export function DashboardMockup({ className }: { className?: string }) {
             <MockCard className="p-3">
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="text-xs font-semibold text-slate-900">Machine capacity · today</div>
-                  <div className="text-[10px] text-slate-500">Net shift minutes × efficiency − downtime</div>
+                  <div className="text-xs font-semibold text-foreground">Machine capacity · today</div>
+                  <div className="text-[10px] text-stone-500">Net shift minutes × efficiency − downtime</div>
                 </div>
-                <span className="hidden text-[11px] font-medium text-indigo-600 @sm:inline">View machines</span>
+                <span className="hidden text-[11px] font-medium text-primary @sm:inline">View machines</span>
               </div>
               <ul className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-2.5 @lg:grid-cols-4">
                 {CAPACITY.map((m) => {
@@ -185,20 +185,20 @@ export function DashboardMockup({ className }: { className?: string }) {
                     <li key={m.code} className="min-w-0">
                       <div className="flex items-baseline justify-between gap-2">
                         <Code className="text-[11px]">{m.code}</Code>
-                        <span className={cn("text-[11px] font-semibold", "idle" in m ? "text-slate-400" : "text-slate-900")}>
-                          {"idle" in m ? "0" : m.available} <span className="font-normal text-slate-500">min</span>
+                        <span className={cn("text-[11px] font-semibold", "idle" in m ? "text-stone-400" : "text-foreground")}>
+                          {"idle" in m ? "0" : m.available} <span className="font-normal text-stone-500">min</span>
                         </span>
                       </div>
                       <div
                         className={cn(
-                          "mt-1 flex h-2 w-full overflow-hidden rounded-full bg-slate-100",
-                          "idle" in m && "border border-dashed border-slate-300 bg-transparent",
+                          "mt-1 flex h-2 w-full overflow-hidden rounded-full bg-muted",
+                          "idle" in m && "border border-dashed border-stone-300 bg-transparent",
                         )}
                       >
-                        <span className="h-full bg-indigo-500" style={{ width: `${avail}%` }} />
+                        <span className="h-full bg-teal-600" style={{ width: `${avail}%` }} />
                         {down > 0 ? <span className="h-full bg-amber-400" style={{ width: `${down}%` }} /> : null}
                       </div>
-                      <div className="mt-1 truncate text-[10px] text-slate-500">{m.note}</div>
+                      <div className="mt-1 truncate text-[10px] text-stone-500">{m.note}</div>
                     </li>
                   );
                 })}

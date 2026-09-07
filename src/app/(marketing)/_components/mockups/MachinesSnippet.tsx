@@ -7,14 +7,14 @@ export function MachinesSnippet() {
   return (
     <MockSnippet caption="Illustration of the machines list filtered to the CNC work center, showing active, maintenance and inactive machines and a red 'Down · Maintenance until 12:00' badge on a machine inside a maintenance window.">
       <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="inline-flex h-7 items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 text-[11px] font-medium text-indigo-700">
+        <span className="inline-flex h-7 items-center gap-1 rounded-md border border-teal-200 bg-primary-soft px-2 text-[11px] font-medium text-primary-soft-foreground">
           Work center: CNC
           <X className="size-3" />
         </span>
-        <span className="inline-flex h-7 items-center rounded-md border border-slate-200 bg-white px-2 text-[11px] font-medium text-slate-700">
+        <span className="inline-flex h-7 items-center rounded-md border border-border bg-white px-2 text-[11px] font-medium text-stone-700">
           Status: All
         </span>
-        <span className="ml-auto text-[11px] text-slate-500">5 machines</span>
+        <span className="ml-auto text-[11px] text-stone-500">5 machines</span>
       </div>
       <MockCard>
         <MockTable

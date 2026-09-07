@@ -25,7 +25,7 @@ export function Features() {
       <Container>
         <SectionHeader
           id="features-title"
-          eyebrow="What ships in Milestone 1"
+          eyebrow="Everything in one workspace"
           title="Everything the schedule will run on, kept honest."
           lead="Orders with deadlines, machines with real shift capacity, materials with real stock — and a dashboard that shows where the day stands."
         />
@@ -33,14 +33,14 @@ export function Features() {
           {FEATURES.map((feature) => (
             <li
               key={feature.key}
-              className="flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-slate-900/10 transition-shadow duration-200 ease-out hover:shadow-[0_24px_48px_-32px_rgb(15_23_42_/_0.35)]"
+              className="flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-foreground/10 transition-shadow duration-200 ease-out hover:shadow-[0_24px_48px_-32px_rgb(28_25_23_/_0.35)]"
             >
               <div className="flex flex-col gap-3 p-6 pb-5">
                 <Eyebrow chip={false}>{feature.area}</Eyebrow>
-                <h3 className="text-xl leading-tight font-bold text-slate-900 md:text-[1.375rem]">{feature.title}</h3>
-                <p className="text-base leading-relaxed text-pretty text-slate-600">{feature.copy}</p>
+                <h3 className="text-xl leading-tight font-bold text-foreground md:text-[1.375rem]">{feature.title}</h3>
+                <p className="text-base leading-relaxed text-pretty text-muted-foreground">{feature.copy}</p>
               </div>
-              <div className="mt-auto border-t border-slate-100 bg-slate-50 p-4">{SNIPPETS[feature.key]}</div>
+              <div className="mt-auto border-t border-stone-100 bg-background p-4">{SNIPPETS[feature.key]}</div>
             </li>
           ))}
         </ul>

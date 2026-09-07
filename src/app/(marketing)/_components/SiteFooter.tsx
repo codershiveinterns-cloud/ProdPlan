@@ -8,7 +8,7 @@ import { BrandLockup, Container, TextLink } from "./ui";
 export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number }) {
   const linkClass = "inline-flex min-h-11 items-center py-2 text-sm";
   return (
-    <footer className="bg-(--band) text-(--band-foreground)">
+    <footer className="marketing-band text-(--band-foreground)">
       <Container className="py-14">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-xs">

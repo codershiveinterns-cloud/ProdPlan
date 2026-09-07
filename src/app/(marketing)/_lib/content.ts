@@ -17,7 +17,7 @@ export const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
 ];
 
 export const HERO = {
-  eyebrow: "Production planning · Milestone 1 preview",
+  eyebrow: "Production planning for discrete manufacturers",
   headline: "Plan production against real orders, machines and materials.",
   subhead:
     "ProdPlan replaces the planning spreadsheet with one live record of customer orders, shift capacity and material stock — with the right access for everyone from admin to floor supervisor.",
@@ -145,13 +145,13 @@ export const ROADMAP: ReadonlyArray<{ title: string; copy: string }> = [
   },
 ];
 
-export const ROADMAP_FOOTNOTE = "Both build on the M1 data model: no re-entry of orders or master data.";
+export const ROADMAP_FOOTNOTE = "Everything builds on one record of orders and master data.";
 
 export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
     question: "Does ProdPlan schedule jobs onto machines?",
     answer:
-      "Not yet. Today it holds orders, capacity and materials so a schedule has something reliable to run on. The day-by-day planning board with conflict detection is the next milestone.",
+      "Not yet. Today it holds orders, capacity and materials so a schedule has something reliable to run on. Scheduling builds on this same record, so nothing is entered twice.",
   },
   {
     question: "Can I import orders from my ERP or spreadsheet?",
@@ -176,7 +176,7 @@ export const FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   {
     question: "What if someone forgets their password?",
     answer:
-      "An Admin resets it from Settings › Users and shares a temporary password; the user sets a new one at the next sign-in. Self-service email reset arrives with notifications in a later milestone.",
+      "An Admin resets it from Settings › Users and shares a temporary password; the user sets a new one at the next sign-in. Admins can reset any password from Settings in seconds.",
   },
 ];
 
@@ -190,10 +190,10 @@ export const FOOTER = {
     { label: "Features", href: "#features" },
     { label: "How it works", href: "#how-it-works" },
     { label: "Roles", href: "#roles" },
-    { label: "Coming next", href: "#coming-next" },
+    
     { label: "FAQ", href: "#faq" },
   ],
   resources: [{ label: "System status", href: "/api/health" }],
   builtWith: "Built with Next.js and PostgreSQL",
-  milestone: "Milestone 1 preview",
+  milestone: "Production planning",
 } as const;

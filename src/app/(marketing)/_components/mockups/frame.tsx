@@ -25,8 +25,8 @@ export function MockFrame({
       <div
         aria-hidden="true"
         className={cn(
-          "@container overflow-hidden rounded-2xl bg-background text-[13px] leading-tight text-slate-700 ring-1 ring-slate-900/10 [font-variant-numeric:tabular-nums]",
-          shadow && "shadow-[0_32px_64px_-32px_rgb(15_23_42_/_0.35)]",
+          "@container overflow-hidden rounded-2xl bg-background text-[13px] leading-tight text-stone-700 ring-1 ring-foreground/10 [font-variant-numeric:tabular-nums]",
+          shadow && "shadow-[0_32px_64px_-32px_rgb(28_25_23_/_0.35)]",
         )}
       >
         {children}
@@ -50,7 +50,7 @@ export function MockSnippet({
     <figure className={cn("relative m-0", className)}>
       <div
         aria-hidden="true"
-        className="@container overflow-hidden rounded-xl bg-background p-3 text-xs leading-tight text-slate-700 ring-1 ring-slate-900/10 [font-variant-numeric:tabular-nums]"
+        className="@container overflow-hidden rounded-xl bg-background p-3 text-xs leading-tight text-stone-700 ring-1 ring-foreground/10 [font-variant-numeric:tabular-nums]"
       >
         {children}
       </div>
@@ -79,7 +79,7 @@ export const PILL = {
   valid: "border-green-200 bg-green-50 text-green-700",
   errors: "border-red-200 bg-red-50 text-red-700",
   warning: "border-amber-200 bg-amber-50 text-amber-800",
-  info: "border-indigo-200 bg-indigo-50 text-indigo-700",
+  info: "border-teal-200 bg-primary-soft text-primary-soft-foreground",
 } as const;
 
 export type PillTone = keyof typeof PILL;
@@ -101,14 +101,14 @@ export function Pill({ tone, className, children }: { tone: PillTone; className?
 
 /** Monospace code (order numbers, machine and material codes). */
 export function Code({ className, ...props }: ComponentProps<"span">) {
-  return <span className={cn("font-mono text-[12px] whitespace-nowrap text-slate-900", className)} {...props} />;
+  return <span className={cn("font-mono text-[12px] whitespace-nowrap text-foreground", className)} {...props} />;
 }
 
 export const DUE_TONE = {
   overdue: "font-medium text-red-700",
   soon: "font-medium text-amber-700",
-  upcoming: "text-slate-900",
-  later: "text-slate-500",
+  upcoming: "text-foreground",
+  later: "text-stone-500",
 } as const;
 
 /** Due hint text with the DueHint colour semantics. */
@@ -118,10 +118,10 @@ export function Due({ tone, children }: { tone: keyof typeof DUE_TONE; children:
 
 /** White card with the app's `ring-1 ring-foreground/10` frame. */
 export function MockCard({ className, ...props }: ComponentProps<"div">) {
-  return <div className={cn("overflow-hidden rounded-xl bg-white ring-1 ring-slate-900/10", className)} {...props} />;
+  return <div className={cn("overflow-hidden rounded-xl bg-white ring-1 ring-foreground/10", className)} {...props} />;
 }
 
-/** Table shell: slate-100 header, 13 px, 36 px rows, right-aligned numbers via `num`. */
+/** Table shell: stone-100 header, 13 px, 36 px rows, right-aligned numbers via `num`. */
 export function MockTable({
   head,
   children,
@@ -134,18 +134,18 @@ export function MockTable({
   return (
     <table className={cn("w-full border-collapse text-left text-[12px] [font-variant-numeric:tabular-nums]", className)}>
       <thead>
-        <tr className="bg-slate-100 text-[11px] font-medium text-slate-600 [&>th]:h-8 [&>th]:px-2 [&>th]:font-medium [&>th]:whitespace-nowrap [&>th:first-child]:pl-3 [&>th:last-child]:pr-3">
+        <tr className="bg-muted text-[11px] font-medium text-muted-foreground [&>th]:h-8 [&>th]:px-2 [&>th]:font-medium [&>th]:whitespace-nowrap [&>th:first-child]:pl-3 [&>th:last-child]:pr-3">
           {head}
         </tr>
       </thead>
-      <tbody className="[&>tr]:border-t [&>tr]:border-slate-100 [&>tr>td]:h-9 [&>tr>td]:px-2 [&>tr>td]:whitespace-nowrap [&>tr>td:first-child]:pl-3 [&>tr>td:last-child]:pr-3">
+      <tbody className="[&>tr]:border-t [&>tr]:border-stone-100 [&>tr>td]:h-9 [&>tr>td]:px-2 [&>tr>td]:whitespace-nowrap [&>tr>td:first-child]:pl-3 [&>tr>td:last-child]:pr-3">
         {children}
       </tbody>
     </table>
   );
 }
 
-/** KPI tile in the dashboard mockup: label 11 px slate-500, value 22 px semibold, tone as in StatCard. */
+/** KPI tile in the dashboard mockup: label 11 px stone-500, value 22 px semibold, tone as in StatCard. */
 export function KpiTile({
   label,
   value,
@@ -165,18 +165,18 @@ export function KpiTile({
   iconClassName?: string;
 }) {
   const tones = {
-    default: { value: "text-slate-900", ring: "ring-slate-900/10", chip: "bg-slate-100 text-slate-500" },
+    default: { value: "text-foreground", ring: "ring-foreground/10", chip: "bg-muted text-stone-500" },
     warn: { value: "text-amber-700", ring: "ring-amber-200", chip: "bg-amber-50 text-amber-700" },
     danger: { value: "text-red-700", ring: "ring-red-200", chip: "bg-red-50 text-red-700" },
-    info: { value: "text-blue-700", ring: "ring-slate-900/10", chip: "bg-blue-50 text-blue-700" },
+    info: { value: "text-blue-700", ring: "ring-foreground/10", chip: "bg-blue-50 text-blue-700" },
   } as const;
   const t = tones[tone];
   return (
     <div className={cn("flex items-start justify-between gap-2 rounded-[10px] bg-white p-3 ring-1", t.ring, className)}>
       <div className="min-w-0">
-        <div className="truncate text-[11px] font-medium text-slate-500">{label}</div>
+        <div className="truncate text-[11px] font-medium text-stone-500">{label}</div>
         <div className={cn("mt-0.5 text-[22px] leading-7 font-semibold tracking-tight", t.value)}>{value}</div>
-        {hint ? <div className="mt-1 truncate text-[10px] text-slate-500">{hint}</div> : null}
+        {hint ? <div className="mt-1 truncate text-[10px] text-stone-500">{hint}</div> : null}
       </div>
       <span
         className={cn("flex size-7 shrink-0 items-center justify-center rounded-md [&_svg]:size-3.5", t.chip, iconClassName)}

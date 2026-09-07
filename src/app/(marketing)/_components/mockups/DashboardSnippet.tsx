@@ -21,15 +21,15 @@ export function DashboardSnippet() {
       </div>
 
       <MockCard className="mt-2.5">
-        <div className="px-3 pt-2.5 pb-1 text-[12px] font-semibold text-slate-900">Recent activity</div>
-        <ul className="divide-y divide-slate-100">
+        <div className="px-3 pt-2.5 pb-1 text-[12px] font-semibold text-foreground">Recent activity</div>
+        <ul className="divide-y divide-stone-100">
           {ACTIVITY.map((a) => (
             <li key={a.entity} className="flex items-start justify-between gap-3 px-3 py-2 text-[11px] leading-4">
-              <span className="min-w-0 text-slate-600">
-                <span className="font-medium text-slate-900">{a.actor}</span> {a.verb} <Code className="text-[11px]">{a.entity}</Code>{" "}
+              <span className="min-w-0 text-muted-foreground">
+                <span className="font-medium text-foreground">{a.actor}</span> {a.verb} <Code className="text-[11px]">{a.entity}</Code>{" "}
                 <span className="hidden @sm:inline">{a.detail}</span>
               </span>
-              <span className="shrink-0 text-slate-500">{a.when}</span>
+              <span className="shrink-0 text-stone-500">{a.when}</span>
             </li>
           ))}
         </ul>

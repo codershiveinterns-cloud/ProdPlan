@@ -17,11 +17,11 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
             <h1
               id="hero-title"
               data-rise="2"
-              className="max-w-[14ch] text-[2.375rem] leading-[1.05] font-extrabold tracking-[-0.03em] text-slate-900 md:text-5xl xl:text-[3.5rem]"
+              className="max-w-[14ch] text-[2.375rem] leading-[1.05] font-extrabold tracking-[-0.03em] text-foreground md:text-5xl xl:text-[3.5rem]"
             >
               {HERO.headline}
             </h1>
-            <p data-rise="3" className="max-w-[60ch] text-lg leading-relaxed text-pretty text-slate-600 md:text-xl">
+            <p data-rise="3" className="max-w-[60ch] text-lg leading-relaxed text-pretty text-muted-foreground md:text-xl">
               {HERO.subhead}
             </p>
             <div data-rise="4" className="flex w-full flex-col gap-3">
@@ -41,9 +41,9 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
                   {HERO.secondaryCta}
                 </CtaLink>
               </div>
-              <p className="text-[13px] leading-5 text-slate-600">{HERO.frictionReducer}</p>
+              <p className="text-[13px] leading-5 text-muted-foreground">{HERO.frictionReducer}</p>
               {signedIn ? null : (
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-muted-foreground">
                   {HERO.tertiary.prefix} <TextLink href="/login">{HERO.tertiary.label}</TextLink>
                 </p>
               )}

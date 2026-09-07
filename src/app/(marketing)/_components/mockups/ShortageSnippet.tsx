@@ -19,11 +19,11 @@ export function ShortageSnippet() {
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <Code className="font-semibold">SO-000121</Code>
-          <span className="text-[11px] text-slate-500">GX-40 Gearbox Housing · 120 pcs</span>
+          <span className="text-[11px] text-stone-500">GX-40 Gearbox Housing · 120 pcs</span>
           <Pill tone="queued">Queued</Pill>
           <Pill tone="urgent">Urgent</Pill>
         </div>
-        <div className="text-[11px] text-slate-500">
+        <div className="text-[11px] text-stone-500">
           Due 07 Sep 2026 · <Due tone="soon">Due today</Due>
         </div>
       </div>
@@ -38,8 +38,8 @@ export function ShortageSnippet() {
 
       <MockCard className="mt-2.5">
         <div className="px-3 pt-2.5 pb-1.5">
-          <div className="text-[12px] font-semibold text-slate-900">Material requirement</div>
-          <div className="text-[10px] text-slate-500">qty × (qty per unit × (1 + scrap %))</div>
+          <div className="text-[12px] font-semibold text-foreground">Material requirement</div>
+          <div className="text-[10px] text-stone-500">qty × (qty per unit × (1 + scrap %))</div>
         </div>
         <MockTable
           head={
@@ -56,11 +56,11 @@ export function ShortageSnippet() {
             <tr key={r.code} className={r.tone === "short" ? "bg-red-50/40" : undefined}>
               <td>
                 <Code className="text-[11px]">{r.code}</Code>
-                <span className="ml-1.5 hidden text-slate-500 @lg:inline">{r.name}</span>
+                <span className="ml-1.5 hidden text-stone-500 @lg:inline">{r.name}</span>
               </td>
-              <td className="text-right font-medium text-slate-900">{r.required}</td>
+              <td className="text-right font-medium text-foreground">{r.required}</td>
               <td className="hidden text-right @sm:table-cell">{r.onHand}</td>
-              <td className={r.tone === "short" ? "text-right font-semibold text-red-700" : "text-right text-slate-400"}>
+              <td className={r.tone === "short" ? "text-right font-semibold text-red-700" : "text-right text-stone-400"}>
                 {r.short}
               </td>
               <td className="hidden @md:table-cell">
@@ -69,7 +69,7 @@ export function ShortageSnippet() {
             </tr>
           ))}
         </MockTable>
-        <div className="px-3 py-2 text-[10px] text-slate-500">vs unallocated stock on hand — does not net other open orders</div>
+        <div className="px-3 py-2 text-[10px] text-stone-500">vs unallocated stock on hand — does not net other open orders</div>
       </MockCard>
     </MockSnippet>
   );

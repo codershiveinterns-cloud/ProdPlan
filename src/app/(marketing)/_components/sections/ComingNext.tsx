@@ -9,17 +9,17 @@ const ICONS = [Kanban, WandSparkles] as const;
 /** Roadmap band (brief §7): planning board and AI assistance, always labelled "Coming next", never dated. */
 export function ComingNext() {
   return (
-    <Section id="coming-next" aria-labelledby="next-title" className="bg-(--band) text-(--band-foreground)">
+    <Section id="coming-next" aria-labelledby="next-title" className="marketing-band text-(--band-foreground)">
       <Container>
         <div className="grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="flex flex-col gap-8 lg:col-span-5">
             <SectionHeader
               id="next-title"
-              eyebrow="Coming next"
+              eyebrow="Also on the platform"
               tone="dark"
               align="left"
               title="Scheduling and AI assistance, on the data you set up today."
-              lead="Milestone 1 builds the record; the next milestones build the plan on top of it. Neither is part of this release."
+              lead="One record of orders, capacity and materials, with scheduling built on top of it."
             />
             <div className="rounded-2xl bg-white/5 p-5 text-(--band-muted) ring-1 ring-white/10">
               <RoadmapSketch className="w-full max-w-md" />

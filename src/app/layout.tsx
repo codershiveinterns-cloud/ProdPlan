@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
@@ -8,9 +8,17 @@ import { appUrl } from "@/lib/auth/jwt";
 
 import "./globals.css";
 
+/** Body / UI face (docs/DESIGN_BRIEF.md §4). */
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+/** Display face for page titles and landing headings; falls back to Inter through the `--font-heading` chain. */
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -28,12 +36,12 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f8fafc",
+  themeColor: "#fafaf9",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} ${manrope.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
         <Toaster richColors position="top-right" closeButton />

@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEM =
-  "flex h-11 items-center rounded-lg px-3 text-base font-medium text-slate-700 outline-none hover:bg-muted hover:text-slate-900 focus-visible:ring-3 focus-visible:ring-ring/50";
+  "flex h-11 items-center rounded-lg px-3 text-base font-medium text-stone-700 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50";
 const BUTTON =
   "inline-flex h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-medium outline-none transition-colors duration-150 focus-visible:ring-3 focus-visible:ring-ring/50";
 
@@ -38,7 +38,7 @@ export function MobileMenu({
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex size-11 items-center justify-center rounded-lg text-slate-700 outline-none hover:bg-muted hover:text-slate-900 focus-visible:ring-3 focus-visible:ring-ring/50"
+        className="inline-flex size-11 items-center justify-center rounded-lg text-stone-700 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
       >
         {open ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
         <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
@@ -47,7 +47,7 @@ export function MobileMenu({
       <div
         id={panelId}
         hidden={!open}
-        className="absolute inset-x-0 top-full border-b border-slate-200 bg-background shadow-md"
+        className="absolute inset-x-0 top-full border-b border-border bg-background shadow-md"
       >
         <nav aria-label="Site" className="px-4 py-3">
           <ul className="flex flex-col gap-0.5">
@@ -59,7 +59,7 @@ export function MobileMenu({
               </li>
             ))}
           </ul>
-          <div className="mt-3 flex flex-col gap-2 border-t border-slate-200 pt-3">
+          <div className="mt-3 flex flex-col gap-2 border-t border-border pt-3">
             {signedIn ? (
               <Link href="/dashboard" onClick={close} className={cn(BUTTON, "bg-primary text-primary-foreground shadow-xs")}>
                 Open dashboard
@@ -69,7 +69,7 @@ export function MobileMenu({
                 <Link
                   href="/login"
                   onClick={close}
-                  className={cn(BUTTON, "border border-input bg-card text-slate-900 shadow-xs hover:bg-muted")}
+                  className={cn(BUTTON, "border border-input bg-card text-foreground shadow-xs hover:bg-muted")}
                 >
                   Sign in
                 </Link>

@@ -67,7 +67,7 @@ export function OrdersSnippet() {
       <MockCard className="mt-2.5 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
-            <div className="text-[11px] font-semibold text-slate-900">Import preview · orders-sept.csv</div>
+            <div className="text-[11px] font-semibold text-foreground">Import preview · orders-sept.csv</div>
             <div className="mt-1.5 flex flex-wrap gap-1.5">
               <Pill tone="valid">38 valid</Pill>
               <Pill tone="errors">2 with errors</Pill>
@@ -75,7 +75,7 @@ export function OrdersSnippet() {
               <Pill tone="info">3 new customers</Pill>
             </div>
           </div>
-          <span className="inline-flex h-8 items-center rounded-md bg-indigo-600 px-3 text-[11px] font-medium text-white">
+          <span className="inline-flex h-8 items-center rounded-md bg-primary px-3 text-[11px] font-medium text-white">
             Import 38 valid rows
           </span>
         </div>

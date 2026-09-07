@@ -6,7 +6,7 @@ import { Container, CtaLink } from "../ui";
 /** Closing band (brief §6.8) on the dark tokens; repeats the primary action. */
 export function FinalCta({ signedIn }: { signedIn: boolean }) {
   return (
-    <section aria-labelledby="final-title" className="bg-(--band) py-16 text-(--band-foreground) sm:py-20">
+    <section aria-labelledby="final-title" className="marketing-band py-16 text-(--band-foreground) sm:py-20">
       <Container>
         <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
           <h2 id="final-title" className="text-[1.75rem] leading-[1.1] font-bold tracking-[-0.02em] md:text-4xl">

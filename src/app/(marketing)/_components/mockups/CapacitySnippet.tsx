@@ -26,17 +26,17 @@ export function CapacitySnippet() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="min-w-0">
             <Code className="font-semibold">CNC-02</Code>
-            <span className="ml-1.5 text-[11px] text-slate-500">Haas VF-2 · CNC · Two shifts</span>
+            <span className="ml-1.5 text-[11px] text-stone-500">Haas VF-2 · CNC · Two shifts</span>
           </div>
           <div className="flex items-center gap-2">
             <Pill tone="active">Active</Pill>
-            <span className="text-[11px] text-slate-500">Efficiency 90 %</span>
+            <span className="text-[11px] text-stone-500">Efficiency 90 %</span>
           </div>
         </div>
 
         <div className="mt-3">
-          <div className="text-[12px] font-semibold text-slate-900">Capacity — next 7 days</div>
-          <div className="text-[10px] text-slate-500">Net shift minutes × efficiency − downtime</div>
+          <div className="text-[12px] font-semibold text-foreground">Capacity — next 7 days</div>
+          <div className="text-[10px] text-stone-500">Net shift minutes × efficiency − downtime</div>
         </div>
 
         <ul className="mt-3 grid grid-cols-7 gap-1.5 @sm:gap-2.5">
@@ -46,39 +46,39 @@ export function CapacitySnippet() {
             const downPct = (d.downtime / SCALE) * 100;
             return (
               <li key={d.day} className="flex min-w-0 flex-col items-center">
-                <div className="text-[10px] text-slate-500">{d.day}</div>
-                <div className="text-[11px] font-medium text-slate-900">{d.date}</div>
+                <div className="text-[10px] text-stone-500">{d.day}</div>
+                <div className="text-[11px] font-medium text-foreground">{d.date}</div>
                 <div
                   className={cn(
-                    "mt-1.5 flex h-24 w-full max-w-8 flex-col justify-end overflow-hidden rounded-md bg-slate-100",
-                    off && "border border-dashed border-slate-300 bg-transparent",
+                    "mt-1.5 flex h-24 w-full max-w-8 flex-col justify-end overflow-hidden rounded-md bg-muted",
+                    off && "border border-dashed border-stone-300 bg-transparent",
                   )}
                 >
                   {downPct > 0 ? <span className="w-full bg-amber-400" style={{ height: `${downPct}%` }} /> : null}
-                  <span className="w-full bg-indigo-500" style={{ height: `${availPct}%` }} />
+                  <span className="w-full bg-teal-600" style={{ height: `${availPct}%` }} />
                 </div>
-                <div className={cn("mt-1.5 text-[11px] font-medium", off ? "text-slate-400" : "text-slate-900")}>
+                <div className={cn("mt-1.5 text-[11px] font-medium", off ? "text-stone-400" : "text-foreground")}>
                   {d.available}
                 </div>
-                <div className="hidden max-w-full truncate text-[9px] text-slate-500 @sm:block">{d.note}</div>
+                <div className="hidden max-w-full truncate text-[9px] text-stone-500 @sm:block">{d.note}</div>
               </li>
             );
           })}
         </ul>
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-slate-100 pt-2.5 text-[10px] text-slate-500">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-stone-100 pt-2.5 text-[10px] text-stone-500">
           <span>
-            Week total <span className="font-semibold text-slate-900">3,810 min</span> · Downtime 240 min · 1 holiday
+            Week total <span className="font-semibold text-foreground">3,810 min</span> · Downtime 240 min · 1 holiday
           </span>
           <span className="flex items-center gap-2.5">
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-indigo-500" /> Available
+              <span className="size-2 rounded-full bg-teal-600" /> Available
             </span>
             <span className="flex items-center gap-1">
               <span className="size-2 rounded-full bg-amber-400" /> Downtime
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-slate-200" /> Non-working
+              <span className="size-2 rounded-full bg-stone-200" /> Non-working
             </span>
           </span>
         </div>

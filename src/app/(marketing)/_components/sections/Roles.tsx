@@ -16,12 +16,12 @@ export function Roles() {
             {ROLES.map((role, i) => {
               const Icon = ROLE_ICONS[i] ?? UserCog;
               return (
-                <li key={role.name} className="flex flex-col gap-3 rounded-2xl bg-white p-6 ring-1 ring-slate-900/10">
+                <li key={role.name} className="flex flex-col gap-3 rounded-2xl bg-white p-6 ring-1 ring-foreground/10">
                   <IconChip>
                     <Icon />
                   </IconChip>
-                  <h3 className="text-xl leading-tight font-bold text-slate-900">{role.name}</h3>
-                  <p className="text-base leading-relaxed text-pretty text-slate-600">{role.blurb}</p>
+                  <h3 className="text-xl leading-tight font-bold text-foreground">{role.name}</h3>
+                  <p className="text-base leading-relaxed text-pretty text-muted-foreground">{role.blurb}</p>
                 </li>
               );
             })}
@@ -29,7 +29,7 @@ export function Roles() {
 
           <aside
             aria-labelledby="isolation-title"
-            className="flex flex-col gap-4 rounded-2xl bg-(--band) p-6 text-(--band-foreground) ring-1 ring-slate-900/10 lg:p-8"
+            className="flex flex-col gap-4 rounded-2xl marketing-band p-6 text-(--band-foreground) ring-1 ring-foreground/10 lg:p-8"
           >
             <span className="flex size-10 items-center justify-center rounded-lg bg-white/10 text-(--band-accent)" aria-hidden="true">
               <ShieldCheck className="size-5" />

@@ -15,7 +15,7 @@ export function Sidebar({ role, tenantName }: { role: Role; tenantName: string }
         <SidebarNav role={role} />
       </div>
       <div className="border-t border-sidebar-border px-4 py-3 text-xs text-muted-foreground">
-        ProdPlan · Milestone 1
+        ProdPlan · Production planning
       </div>
     </aside>
   );
