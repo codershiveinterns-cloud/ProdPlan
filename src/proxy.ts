@@ -56,7 +56,7 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     return res;
   }
 
-  if (isPublic || pathname === "/") {
+  if (isPublic) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
