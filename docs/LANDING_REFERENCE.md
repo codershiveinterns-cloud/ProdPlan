@@ -51,6 +51,13 @@ full-width stacked CTAs, bullets, then the mockup card full width, slightly crop
 bar scrolls horizontally; all grids go single column; cards keep 24 px padding; section padding drops to `py-16`;
 back-to-top stays bottom-right; no horizontal overflow.
 
+Mobile addendum (observed at 375 px): the header keeps a compact primary pill ("Demo") next to the hamburger
+(`aria-label="Toggle navigation menu"`); H1 ≈ 36 px on two lines with the highlighted second line; lead paragraph
+centred; trust line wraps; both CTAs full-width and stacked (primary first); micro-bullets centred; the browser
+mockup renders full width with its title bar wrapping the URL; the feature tab pills **wrap into 2–3 rows** (not a
+horizontal scroller) and the active pill keeps the brand fill; cards are single-column with 24 px padding; the
+back-to-top button stays bottom-right at 44 px.
+
 ---
 
 ## 2. ProdPlan mapping (same anatomy, honest content)
