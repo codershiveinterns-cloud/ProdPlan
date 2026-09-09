@@ -31,9 +31,11 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {FOOTER.product.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className={link}>
-                    {l.label}
-                  </a>
+                  {l.href.startsWith("#") ? (
+                    <span aria-disabled="true" className={link}>{l.label}</span>
+                  ) : (
+                    <a href={l.href} className={link}>{l.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -46,9 +48,11 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {FOOTER.company.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className={link}>
-                    {l.label}
-                  </a>
+                  {l.href.startsWith("#") ? (
+                    <span aria-disabled="true" className={link}>{l.label}</span>
+                  ) : (
+                    <a href={l.href} className={link}>{l.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
@@ -61,9 +65,11 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {account.map((l) => (
                 <li key={l.label}>
-                  <a href={l.href} className={link}>
-                    {l.label}
-                  </a>
+                  {l.href.startsWith("#") ? (
+                    <span aria-disabled="true" className={link}>{l.label}</span>
+                  ) : (
+                    <a href={l.href} className={link}>{l.label}</a>
+                  )}
                 </li>
               ))}
             </ul>
