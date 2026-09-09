@@ -51,6 +51,12 @@ coverage/
 # keep the example env file in git
 !.env.example
 
+# Cloudflare (OpenNext adapter + wrangler)
+.open-next/
+.wrangler/
+.dev.vars
+!.dev.vars.example
+
 # local Claude launch config
 .claude/
 

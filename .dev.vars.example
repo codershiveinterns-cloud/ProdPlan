@@ -1,0 +1,9 @@
+# Local secrets for `npm run cf:preview` (wrangler dev). Copy to .dev.vars — never commit .dev.vars.
+# Session signing secret: at least 32 random bytes (openssl rand -base64 48)
+AUTH_SECRET="replace-me-with-a-long-random-string"
+# Fallback connection string when the HYPERDRIVE binding has no local connection string
+DATABASE_URL="postgresql://USER@127.0.0.1:5433/prodplan"
+# Optional: enables POST /api/demo/reset (header x-demo-reset-token)
+DEMO_RESET_TOKEN=""
+# Public origin used while previewing locally
+APP_URL="http://localhost:8787"

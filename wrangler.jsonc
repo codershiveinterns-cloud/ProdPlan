@@ -1,0 +1,40 @@
+{
+  // Cloudflare Workers configuration for ProdPlan (built with @opennextjs/cloudflare — see docs/CLOUDFLARE.md).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "prodplan-app",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  // nodejs_compat: Node.js APIs for Next.js, pg, jose, bcryptjs. With this date process.env is populated from
+  // vars/secrets automatically (nodejs_compat_populate_process_env).
+  // global_fetch_strictly_public: fetch() to the Worker's own hostname goes over the public network.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Self-reference service binding required by the adapter (name must equal "name" above).
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "prodplan-app"
+    }
+  ],
+  "hyperdrive": [
+    {
+      // Postgres via Hyperdrive. Create it with:
+      //   npx wrangler hyperdrive create prodplan-db --connection-string="postgres://USER:PASS@HOST:5432/DB"
+      // and paste the returned id here. Local dev/preview uses CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
+      // from .env (wrangler loads .env into its own environment).
+      "binding": "HYPERDRIVE",
+      "id": "a0cf84ebe64442a593fe4e552c39964b"
+    }
+  ],
+  "vars": {
+    // Public origin of the deployment (cookie flags, JWT audience, Server Action origin checks). Override per
+    // environment; secrets (AUTH_SECRET, DEMO_RESET_TOKEN) are set with `npx wrangler secret put`.
+    "APP_URL": "https://prodplan-app.codershiveinterns.workers.dev"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
