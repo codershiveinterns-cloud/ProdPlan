@@ -1,10 +1,10 @@
 # ProdPlan on Cloudflare
 
-One deployment runs on the Cloudflare account (Codershiveinterns); it serves the landing page and the application:
+The public address is https://prodplan.pages.dev. Two Cloudflare resources back it:
 
 | What | Where | How to update |
 |---|---|---|
-| Full application (landing, sign-in, demo, dashboard, all modules) | Worker `prodplan` → https://prodplan.codershiveinterns.workers.dev | `npm run cf:build && npx wrangler deploy` |
+| Full application (landing, sign-in, demo, dashboard, all modules) | Pages project `prodplan` → **https://prodplan.pages.dev**, which forwards every request through a service binding to the private Worker `prodplan-app` (no workers.dev address; `workers_dev: false`) | App: `npm run cf:build && npx wrangler deploy`. Pages front (only when `cloudflare/pages/` changes): `cd cloudflare/pages && npx wrangler pages deploy ./public --project-name prodplan --branch main` |
 
 ## Database
 Neon Postgres (project "Prodplan", region us-east-2) reached from the Worker through Hyperdrive config
@@ -30,5 +30,9 @@ error until the account moves to Workers Paid ($5/month, then set `"limits": { "
 wrangler.jsonc). The one-click demo profiles avoid bcrypt once the demo plant exists.
 
 ## Custom domain
-Workers & Pages → prodplan → Settings → Domains & Routes → add the client's domain (Cloudflare manages DNS + TLS);
-then set `APP_URL` in wrangler.jsonc to that origin and redeploy.
+Workers & Pages → prodplan (Pages) → Custom domains → add the client's domain (Cloudflare manages DNS + TLS);
+then set `APP_URL` in wrangler.jsonc to that origin and redeploy the Worker.
+
+The service binding on the Pages project (`APP` → `prodplan-app`) was set through the Cloudflare API and is kept in
+`cloudflare/pages/wrangler.toml`; if the Pages project is ever recreated, re-apply the binding (Pages → Settings →
+Bindings → Service binding `APP` → Worker `prodplan-app`).
