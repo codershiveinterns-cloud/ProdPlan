@@ -7,7 +7,8 @@
 | Environment | Where | Database | URL |
 |---|---|---|---|
 | Local dev | `next dev` on your machine | Project-owned PostgreSQL 15 (`scripts/db-local.sh`, port 5433) | http://localhost:3000 |
-| Staging (M1) | Netlify site `prodplan-staging` (team `gauravcodershive`) | Netlify Database (managed Postgres, Neon-compatible) | https://staging--prodplan-staging.netlify.app (alias deploy); https://prodplan-staging.netlify.app once production publishes are unblocked |
+| **Live** | Vercel project `prodplan` (see `VERCEL.md`) | Neon Postgres | **https://prodplan-app.vercel.app** |
+| Staging (legacy) | Netlify site `prodplan-staging` | Netlify Database | https://staging--prodplan-staging.netlify.app (behind Netlify login; superseded by Vercel) |
 | Production (M3) | Client VPS / Hostinger via Docker Compose (see §5) or Netlify | PostgreSQL 15 on an encrypted volume, backups | client domain + SSL |
 
 ## 2. Environment variables

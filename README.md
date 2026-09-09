@@ -64,7 +64,8 @@ scripts/           db-local.sh · mint-session.ts (dev-only session cookie for c
 
 * [docs/M1_SPEC.md](docs/M1_SPEC.md) — the internal build specification.
 * [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — tenancy, auth, data model, and how M2/M3 plug in.
-* [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — staging on Netlify, environment variables, Docker/VPS path.
+* [docs/VERCEL.md](docs/VERCEL.md) — the live deployment (https://prodplan-app.vercel.app), env vars, migrations.
+* [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — environments, Netlify notes, Docker/VPS path.
 * [docs/HANDOVER.md](docs/HANDOVER.md) — delivered scope, decisions, known limitations, demo script.
 
 ## Tests

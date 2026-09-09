@@ -1,0 +1,8 @@
+.pgdata
+.next
+node_modules
+out-landing
+coverage
+tests
+docs/*.pdf
+.git
