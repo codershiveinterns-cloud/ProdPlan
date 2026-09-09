@@ -1,7 +1,7 @@
 {
   // Cloudflare Workers configuration for ProdPlan (built with @opennextjs/cloudflare — see docs/CLOUDFLARE.md).
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "prodplan-app",
+  "name": "prodplan",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-01",
   // nodejs_compat: Node.js APIs for Next.js, pg, jose, bcryptjs. With this date process.env is populated from
@@ -16,7 +16,7 @@
     {
       // Self-reference service binding required by the adapter (name must equal "name" above).
       "binding": "WORKER_SELF_REFERENCE",
-      "service": "prodplan-app"
+      "service": "prodplan"
     }
   ],
   "hyperdrive": [
@@ -32,7 +32,7 @@
   "vars": {
     // Public origin of the deployment (cookie flags, JWT audience, Server Action origin checks). Override per
     // environment; secrets (AUTH_SECRET, DEMO_RESET_TOKEN) are set with `npx wrangler secret put`.
-    "APP_URL": "https://prodplan-app.codershiveinterns.workers.dev"
+    "APP_URL": "https://prodplan.codershiveinterns.workers.dev"
   },
   "observability": {
     "enabled": true

@@ -4,7 +4,7 @@ One deployment runs on the Cloudflare account (Codershiveinterns); it serves the
 
 | What | Where | How to update |
 |---|---|---|
-| Full application (landing, sign-in, demo, dashboard, all modules) | Worker `prodplan-app` → https://prodplan-app.codershiveinterns.workers.dev | `npm run cf:build && npx wrangler deploy` |
+| Full application (landing, sign-in, demo, dashboard, all modules) | Worker `prodplan` → https://prodplan.codershiveinterns.workers.dev | `npm run cf:build && npx wrangler deploy` |
 
 ## Database
 Neon Postgres (project "Prodplan", region us-east-2) reached from the Worker through Hyperdrive config
@@ -30,5 +30,5 @@ error until the account moves to Workers Paid ($5/month, then set `"limits": { "
 wrangler.jsonc). The one-click demo profiles avoid bcrypt once the demo plant exists.
 
 ## Custom domain
-Workers & Pages → prodplan-app → Settings → Domains & Routes → add the client's domain (Cloudflare manages DNS + TLS);
+Workers & Pages → prodplan → Settings → Domains & Routes → add the client's domain (Cloudflare manages DNS + TLS);
 then set `APP_URL` in wrangler.jsonc to that origin and redeploy.
