@@ -1,9 +1,0 @@
-# Cloudflare Pages front for ProdPlan: https://prodplan.pages.dev
-# Every request is forwarded to the private Worker "prodplan-app" through a service binding.
-name = "prodplan"
-pages_build_output_dir = "./public"
-compatibility_date = "2026-09-01"
-
-[[services]]
-binding = "APP"
-service = "prodplan-app"

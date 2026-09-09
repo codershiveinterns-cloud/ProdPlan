@@ -17,9 +17,6 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:generate": "prisma generate",
-    "cf:build": "node scripts/cf-build.mjs",
-    "cf:preview": "node --env-file-if-exists=.env node_modules/@opennextjs/cloudflare/dist/cli/index.js preview",
-    "cf:deploy": "opennextjs-cloudflare deploy",
     "db:reset": "prisma migrate reset --force",
     "postinstall": "prisma generate"
   },
@@ -51,7 +48,6 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "1.20.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.13.3",
     "@types/papaparse": "^5.5.2",
@@ -64,7 +60,6 @@
     "tailwindcss": "^4",
     "tsx": "^4.23.13",
     "typescript": "^5",
-    "vitest": "^5.0.0",
-    "wrangler": "4.130.0"
+    "vitest": "^5.0.0"
   }
 }

@@ -15,51 +15,26 @@
  * The pure helpers `scopeArgs()` and `scopeWriteData()` are exported so the rewriting rules can be unit-tested
  * without a database (tests/unit/tenant-scope.test.ts).
  */
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { PrismaPg } from "@prisma/adapter-pg";
 import type { ITXClientDenyList } from "@prisma/client/runtime/client";
 import { PrismaClient, Prisma } from "@/generated/prisma/client";
 
 // ---------------------------------------------------------------------------------------------------------------
-// Raw client (lazy; one per process on Node hosts, one per request on Cloudflare Workers)
+// Raw client (lazy singleton)
 // ---------------------------------------------------------------------------------------------------------------
 
-type CloudflareRuntime = { connectionString: string | undefined; requestKey: object };
-
-/**
- * On Cloudflare Workers (built with @opennextjs/cloudflare) returns the Hyperdrive connection string and the
- * per-request ExecutionContext. Anywhere else (Node, Netlify, tests, scripts) `getCloudflareContext()` throws
- * because no Worker context was set, and this returns null — the call is a deliberate no-op there.
- */
-function cloudflareRuntime(): CloudflareRuntime | null {
-  try {
-    const { env, ctx } = getCloudflareContext();
-    const hyperdrive = (env as { HYPERDRIVE?: { connectionString?: string } }).HYPERDRIVE;
-    return { connectionString: hyperdrive?.connectionString, requestKey: ctx };
-  } catch {
-    return null;
-  }
-}
-
-/** Resolution order: Cloudflare Hyperdrive binding → DATABASE_URL → NETLIFY_DB_URL. */
-function connectionString(cf: CloudflareRuntime | null): string {
-  const url = cf?.connectionString ?? process.env.DATABASE_URL ?? process.env.NETLIFY_DB_URL;
+function connectionString(): string {
+  const url = process.env.DATABASE_URL ?? process.env.NETLIFY_DB_URL;
   if (!url) {
     throw new Error(
-      "Database connection string is not configured: bind HYPERDRIVE (Cloudflare), or set DATABASE_URL (local/dev/tests) or NETLIFY_DB_URL (Netlify Database).",
+      "Database connection string is not configured: set DATABASE_URL (local/dev/tests) or NETLIFY_DB_URL (Netlify Database).",
     );
   }
   return url;
 }
 
-function createPrisma(cf: CloudflareRuntime | null): PrismaClient {
-  const adapter = new PrismaPg(
-    cf
-      ? // Workers: Hyperdrive holds the real pool and a socket must never outlive the request that opened it, so
-        // keep the in-isolate pool tiny and single-use (Cloudflare Hyperdrive + Prisma guidance).
-        { connectionString: connectionString(cf), max: 5, maxUses: 1 }
-      : { connectionString: connectionString(null) },
-  );
+function createPrisma(): PrismaClient {
+  const adapter = new PrismaPg({ connectionString: connectionString() });
   return new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
@@ -68,26 +43,15 @@ function createPrisma(cf: CloudflareRuntime | null): PrismaClient {
 
 const globalForPrisma = globalThis as unknown as { __prodplanPrisma?: PrismaClient };
 let moduleClient: PrismaClient | undefined;
-/** Cloudflare: one client per request, keyed on the request's ExecutionContext (GC'd with it). */
-const requestClients = new WeakMap<object, PrismaClient>();
 
 /** Instantiates the client on first use (so importing this module never needs env vars). */
 function resolveClient(): PrismaClient {
-  const cf = cloudflareRuntime();
-  if (cf) {
-    let client = requestClients.get(cf.requestKey);
-    if (!client) {
-      client = createPrisma(cf);
-      requestClients.set(cf.requestKey, client);
-    }
-    return client;
-  }
   if (process.env.NODE_ENV !== "production") {
     // Cached on globalThis so Next's HMR does not open a new pool on every reload.
-    globalForPrisma.__prodplanPrisma ??= createPrisma(null);
+    globalForPrisma.__prodplanPrisma ??= createPrisma();
     return globalForPrisma.__prodplanPrisma;
   }
-  moduleClient ??= createPrisma(null);
+  moduleClient ??= createPrisma();
   return moduleClient;
 }
 
