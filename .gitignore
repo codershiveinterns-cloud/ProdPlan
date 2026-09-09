@@ -60,9 +60,6 @@ coverage/
 # local Claude launch config
 .claude/
 
-# static landing export
-out-landing/
-
 # OpenNext
 .open-next
 

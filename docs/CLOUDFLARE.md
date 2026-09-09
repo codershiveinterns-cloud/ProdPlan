@@ -1,11 +1,10 @@
 # ProdPlan on Cloudflare
 
-Two deployments run on the Cloudflare account (Codershiveinterns):
+One deployment runs on the Cloudflare account (Codershiveinterns); it serves the landing page and the application:
 
 | What | Where | How to update |
 |---|---|---|
 | Full application (landing, sign-in, demo, dashboard, all modules) | Worker `prodplan-app` → https://prodplan-app.codershiveinterns.workers.dev | `npm run cf:build && npx wrangler deploy` |
-| Static landing page only | Pages project `prodplan` → https://prodplan.pages.dev | `APP_URL=https://prodplan-app.codershiveinterns.workers.dev node scripts/export-landing.mjs && npx wrangler pages deploy out-landing --project-name prodplan --branch main` |
 
 ## Database
 Neon Postgres (project "Prodplan", region us-east-2) reached from the Worker through Hyperdrive config
