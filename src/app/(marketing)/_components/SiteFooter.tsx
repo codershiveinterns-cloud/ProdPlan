@@ -11,7 +11,7 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
   const account = signedIn
     ? [{ label: "Open dashboard", href: "/dashboard" }]
     : [
-        { label: "Sign in", href: appHref("/login") },
+        
         { label: "Create your workspace", href: appHref("/signup") },
       ];
 
