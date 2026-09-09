@@ -1,5 +1,6 @@
 import { FOOTER, SITE } from "../_lib/content";
 import { BrandLockup, Container } from "./ui";
+import { appHref } from "../_lib/static";
 
 /** Dark footer: brand column, Product, Company, Account; copyright row. Only real destinations are linked. */
 export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number }) {
@@ -10,8 +11,8 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
   const account = signedIn
     ? [{ label: "Open dashboard", href: "/dashboard" }]
     : [
-        { label: "Sign in", href: "/login" },
-        { label: "Create your workspace", href: "/signup" },
+        { label: "Sign in", href: appHref("/login") },
+        { label: "Create your workspace", href: appHref("/signup") },
       ];
 
   return (

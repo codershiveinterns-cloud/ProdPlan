@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Play } from "lucide-react";
 
 import { demoLoginAction } from "../_lib/demo";
+import { STATIC_LANDING, appHref } from "../_lib/static";
 import { type CtaVariant, ctaClasses } from "./ui";
 
 /**
@@ -22,6 +23,14 @@ export function DemoForm({
   children: ReactNode;
   icon?: boolean;
 }) {
+  if (STATIC_LANDING) {
+    return (
+      <a href={appHref("/login#demo")} className={ctaClasses(variant, size, className)}>
+        {icon ? <Play aria-hidden="true" className="fill-current" /> : null}
+        {children}
+      </a>
+    );
+  }
   return (
     <form action={demoLoginAction.bind(null, "ADMIN")} className="contents">
       <button type="submit" className={ctaClasses(variant, size, className)}>

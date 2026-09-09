@@ -2,6 +2,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { sessionCookieName, verifySessionToken } from "@/lib/auth/jwt";
+import { STATIC_LANDING } from "./static";
 
 /**
  * Landing-page session probe. Verifies the cookie's signature and expiry with jose only — no database — so the
@@ -11,6 +12,7 @@ import { sessionCookieName, verifySessionToken } from "@/lib/auth/jwt";
  * Wrapped in `React.cache` so the layout (header, footer) and the page (hero, final CTA) share one cookie read.
  */
 export const hasVerifiedSession = cache(async (): Promise<boolean> => {
+  if (STATIC_LANDING) return false;
   const store = await cookies();
   const claims = await verifySessionToken(store.get(sessionCookieName())?.value);
   return claims !== null;

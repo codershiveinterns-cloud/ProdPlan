@@ -53,3 +53,14 @@ coverage/
 
 # local Claude launch config
 .claude/
+
+# static landing export
+out-landing/
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { NAV_LINKS, PRODUCT_MENU, SITE } from "../_lib/content";
 import { BrandLockup, ctaClasses } from "./ui";
+import { appHref } from "../_lib/static";
 
 const NAV_ITEM =
   "inline-flex h-10 items-center gap-1 rounded-lg px-3 text-sm font-medium text-stone-700 outline-none transition-colors duration-200 hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50";
@@ -136,11 +137,11 @@ export function SiteHeader({
             </Link>
           ) : (
             <>
-              <Link href="/login" className={cn(ctaClasses("ghost", "md"), "hidden lg:inline-flex")}>
+              <Link href={appHref("/login")} className={cn(ctaClasses("ghost", "md"), "hidden lg:inline-flex")}>
                 Sign in
               </Link>
               <div className="hidden lg:contents">{demoButton}</div>
-              <Link href="/signup" className={cn(ctaClasses("primary", "md"), "hidden lg:inline-flex")}>
+              <Link href={appHref("/signup")} className={cn(ctaClasses("primary", "md"), "hidden lg:inline-flex")}>
                 Create your workspace
                 <ArrowRight aria-hidden="true" />
               </Link>
@@ -212,11 +213,11 @@ export function SiteHeader({
               </Link>
             ) : (
               <>
-                <Link href="/signup" onClick={close} className={ctaClasses("primary", "md", "w-full")}>
+                <Link href={appHref("/signup")} onClick={close} className={ctaClasses("primary", "md", "w-full")}>
                   Create your workspace
                   <ArrowRight aria-hidden="true" />
                 </Link>
-                <Link href="/login" onClick={close} className={ctaClasses("outline", "md", "w-full")}>
+                <Link href={appHref("/login")} onClick={close} className={ctaClasses("outline", "md", "w-full")}>
                   Sign in
                 </Link>
               </>

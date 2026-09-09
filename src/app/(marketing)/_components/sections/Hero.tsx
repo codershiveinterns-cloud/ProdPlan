@@ -4,6 +4,7 @@ import { HERO } from "../../_lib/content";
 import { DemoForm } from "../DemoForm";
 import { DashboardMockup } from "../mockups/DashboardMockup";
 import { Container, CtaLink } from "../ui";
+import { appHref } from "../../_lib/static";
 
 /**
  * Hero (reference section 1): pulsing-dot pill, two-line H1 with the teal highlight, lead, trust line, CTA row,
@@ -56,7 +57,7 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
                 </CtaLink>
               ) : (
                 <>
-                  <CtaLink href="/signup" className="w-full sm:w-auto">
+                  <CtaLink href={appHref("/signup")} className="w-full sm:w-auto">
                     {HERO.primaryCta}
                     <ArrowRight aria-hidden="true" />
                   </CtaLink>

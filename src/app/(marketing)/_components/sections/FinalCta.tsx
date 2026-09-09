@@ -3,6 +3,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { FINAL_CTA } from "../../_lib/content";
 import { Reveal } from "../Reveal";
 import { Container, CtaLink, Pill } from "../ui";
+import { appHref } from "../../_lib/static";
 
 /** Dark final CTA band (reference section 9): pill, H2, paragraph, amber primary + outline-on-dark, three ✓ items. */
 export function FinalCta({ signedIn }: { signedIn: boolean }) {
@@ -24,11 +25,11 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
               </CtaLink>
             ) : (
               <>
-                <CtaLink href="/signup" variant="band-primary" className="w-full sm:w-auto">
+                <CtaLink href={appHref("/signup")} variant="band-primary" className="w-full sm:w-auto">
                   {FINAL_CTA.primary}
                   <ArrowRight aria-hidden="true" />
                 </CtaLink>
-                <CtaLink href="/login" variant="band-outline" className="w-full sm:w-auto">
+                <CtaLink href={appHref("/login")} variant="band-outline" className="w-full sm:w-auto">
                   {FINAL_CTA.secondary}
                 </CtaLink>
               </>

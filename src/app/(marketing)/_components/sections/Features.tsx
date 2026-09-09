@@ -9,6 +9,7 @@ import { OrdersSnippet } from "../mockups/OrdersSnippet";
 import { UsersSnippet } from "../mockups/UsersSnippet";
 import { Reveal } from "../Reveal";
 import { CheckItem, Container, Pill, Section, SectionHeader, TextLink } from "../ui";
+import { appHref } from "../../_lib/static";
 
 const MOCKUPS: Record<FeatureKey, () => React.JSX.Element> = {
   orders: OrdersSnippet,
@@ -51,7 +52,7 @@ export function Features() {
               <span className="block text-xs text-stone-600">{f.stat.detail}</span>
             </span>
           </div>
-          <TextLink href="/signup" className="mt-6 text-sm">
+          <TextLink href={appHref("/signup")} className="mt-6 text-sm">
             See it in the app
             <ArrowRight aria-hidden="true" />
           </TextLink>

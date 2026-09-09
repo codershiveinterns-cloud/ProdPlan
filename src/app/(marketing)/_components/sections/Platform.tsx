@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { PLATFORM } from "../../_lib/content";
 import { Reveal } from "../Reveal";
 import { Card, CheckItem, Container, CtaLink, IconTile, Pill, Section, SectionHeader } from "../ui";
+import { appHref } from "../../_lib/static";
 
 const ICONS = [Package, Factory, Gauge] as const;
 
@@ -56,7 +57,7 @@ export function Platform() {
                     ))}
                   </ul>
                   <div className="mt-auto pt-8">
-                    <CtaLink href="/signup" variant={card.featured ? "primary" : "outline"} size="md" className="w-full">
+                    <CtaLink href={appHref("/signup")} variant={card.featured ? "primary" : "outline"} size="md" className="w-full">
                       Create your workspace
                       <ArrowRight aria-hidden="true" />
                     </CtaLink>

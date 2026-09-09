@@ -3,6 +3,7 @@ import { ArrowRight, Eye, Settings, UserCog, Wrench } from "lucide-react";
 import { ROLES } from "../../_lib/content";
 import { Reveal } from "../Reveal";
 import { Card, CheckItem, Container, IconTile, Pill, Section, SectionHeader, TextLink } from "../ui";
+import { appHref } from "../../_lib/static";
 
 const ICONS = [Settings, UserCog, Wrench, Eye] as const;
 
@@ -38,7 +39,7 @@ export function Roles() {
                       <CheckItem key={b}>{b}</CheckItem>
                     ))}
                   </ul>
-                  <TextLink href="/signup" className="mt-auto pt-6 text-sm">
+                  <TextLink href={appHref("/signup")} className="mt-auto pt-6 text-sm">
                     Create your workspace
                     <ArrowRight aria-hidden="true" />
                   </TextLink>
