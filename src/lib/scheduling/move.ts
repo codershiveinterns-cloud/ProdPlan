@@ -54,6 +54,9 @@ export function validateMove(ctx: MoveValidationContext): void {
   if (ctx.targetMachine.workCenterId !== ctx.entryWorkCenterId) {
     throw new DomainError("The target machine must belong to the same work center", "wrong_work_center", 409);
   }
+  if (ctx.targetMachine.status !== "ACTIVE") {
+    throw new DomainError("Only active machines can be locked with a scheduled operation", "machine_not_active", 409);
+  }
 }
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -11,6 +11,9 @@ import { findOrCreateCustomer } from "@/lib/customers";
 import { fromDateOnly, toDateOnly } from "@/lib/dates";
 import type { TenantDb, TenantTx } from "@/lib/db";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
+import { notify } from "@/lib/notifications/service";
+import { orderStatusChanged } from "@/lib/notifications/events";
+import { holdOrder, releaseOrder } from "@/lib/scheduling/operation-status";
 import { fieldIssue } from "@/lib/orders/issues";
 import { normalizeOrderNumber } from "@/lib/orders/numbers";
 import { isOrderNumberConflict, reserveOrderNumbers, withOrderNumberRetry } from "@/lib/orders/reserve";
@@ -305,6 +308,26 @@ export async function changeOrderStatus(db: TenantDb, session: Session, change: 
       after: { status: to, completedAt: after.completedAt?.toISOString() ?? null, reason: reason ?? null },
       summary: reason ? `${transitionSummary(after.orderNumber, from, to)} — ${reason}` : transitionSummary(after.orderNumber, from, to),
     });
+    // docs/M2_SPEC.md §4: the order-level dialog holds/releases every step; §5: notify the office (+ floor for
+    // ON_HOLD/IN_PROGRESS) of every status change made through this flow, excluding the actor.
+    if (to === "ON_HOLD") {
+      await holdOrder(tx, session, ctx, after.id, reason ?? null);
+    } else if (from === "ON_HOLD") {
+      await releaseOrder(tx, session, ctx, after.id);
+    }
+    await notify(
+      tx,
+      orderStatusChanged({
+        tenantId: session.tenant.id,
+        actorUserId: session.user.id,
+        actorName: session.user.name,
+        orderId: after.id,
+        orderNumber: after.orderNumber,
+        from,
+        to,
+        reason,
+      }),
+    );
     return after;
   });
 }

@@ -36,6 +36,17 @@ describe("validateMove", () => {
     // Moving onto the fixed machine itself is fine.
     expect(() => validateMove({ entryStatus: "QUEUED", entryWorkCenterId: "wc1", targetMachine, fixedMachineId: "m2" })).not.toThrow();
   });
+
+  // Regression: a locked entry must never be dropped onto a machine that isn't schedulable — the engine treats a
+  // locked entry as fixed regardless of machine status, so nothing downstream would ever flag it otherwise.
+  it("rejects a target machine that is not ACTIVE (MAINTENANCE or INACTIVE)", () => {
+    expect(() =>
+      validateMove({ entryStatus: "QUEUED", entryWorkCenterId: "wc1", targetMachine: { id: "m2", workCenterId: "wc1", status: "MAINTENANCE" } }),
+    ).toThrow(/active machines/);
+    expect(() =>
+      validateMove({ entryStatus: "QUEUED", entryWorkCenterId: "wc1", targetMachine: { id: "m2", workCenterId: "wc1", status: "INACTIVE" } }),
+    ).toThrow(DomainError);
+  });
 });
 
 describe("snapMoveInstant", () => {

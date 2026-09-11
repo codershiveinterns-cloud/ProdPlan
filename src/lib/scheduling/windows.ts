@@ -126,15 +126,29 @@ export type Placement = { start: number; end: number };
 
 /**
  * Places `minutes` of work into `free` (sorted, non-overlapping) starting no earlier than `earliest`. Work may span
- * several windows (non-working gaps are skipped); `end` is the real finish instant. Returns null when the windows
- * cannot hold the work.
+ * several windows — a gap between two `free` windows is normally just non-working time (a shift boundary, a
+ * weekend, a break), and it is fine for one entry to span it; `end` is the real finish instant. Returns null when
+ * the windows cannot hold the work.
+ *
+ * `blocking` (optional) marks time that is busy with a DIFFERENT job already committed on this machine (state on
+ * the machine, not a working-time boundary). A placement must never bridge across a `blocking` interval: doing so
+ * would persist one `ScheduleEntry` row whose outer `[start, end)` window visually and logically overlaps another
+ * order's entry, even though the two entries' actual minutes don't collide. When accumulating would require
+ * crossing a `blocking` interval, the search restarts from the window on the far side of it instead.
  */
-export function placeWork(free: readonly Interval[], earliest: number, minutes: number): Placement | null {
+export function placeWork(free: readonly Interval[], earliest: number, minutes: number, blocking: readonly Interval[] = []): Placement | null {
   let need = Math.max(0, minutes) * MINUTE_MS;
   let start = -1;
+  let prevEnd = -1;
   for (const w of free) {
     if (w.e <= earliest) continue;
     const s = Math.max(w.s, earliest);
+    if (start >= 0 && prevEnd >= 0 && blocking.some((b) => b.e > prevEnd && b.s < s)) {
+      // The gap since the last window we used is occupied by another order's job, not just non-working time —
+      // this placement cannot bridge it. Start over from this window.
+      need = Math.max(0, minutes) * MINUTE_MS;
+      start = -1;
+    }
     if (start < 0) {
       start = s;
       if (need === 0) return { start, end: start };
@@ -142,6 +156,7 @@ export function placeWork(free: readonly Interval[], earliest: number, minutes: 
     const usable = w.e - s;
     if (usable >= need) return { start, end: s + need };
     need -= usable;
+    prevEnd = w.e;
   }
   return null;
 }

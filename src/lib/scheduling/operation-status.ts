@@ -286,20 +286,25 @@ export async function applyOperationTransition(
 
   if (dirty) await markScheduleDirty(tx, { orderIds: [entry.orderId] });
 
-  await notify(
-    tx,
-    operationStatusChanged({
-      tenantId: session.tenant.id,
-      actorUserId: session.user.id,
-      actorName: actorName(session),
-      entryId: entry.id,
-      orderId: entry.orderId,
-      orderNumber: entry.order.orderNumber,
-      operationName: entry.workCenter.name,
-      machineCode: entry.machine.code,
-      status: to,
-    }),
-  );
+  // docs/M2_SPEC.md §5: "operation started/completed/paused" — the three transitions that matter to the office;
+  // QUEUED (a hold released back to queue) and SKIPPED are not part of that list.
+  const NOTIFIABLE_OPERATION_STATUSES: readonly OperationStatus[] = ["IN_PROGRESS", "COMPLETED", "ON_HOLD"];
+  if (NOTIFIABLE_OPERATION_STATUSES.includes(to)) {
+    await notify(
+      tx,
+      operationStatusChanged({
+        tenantId: session.tenant.id,
+        actorUserId: session.user.id,
+        actorName: actorName(session),
+        entryId: entry.id,
+        orderId: entry.orderId,
+        orderNumber: entry.order.orderNumber,
+        operationName: entry.workCenter.name,
+        machineCode: entry.machine.code,
+        status: to,
+      }),
+    );
+  }
 
   const rollup = await rollupOrderStatus(tx, session, entry.orderId, ctx, now);
   if (rollup) {

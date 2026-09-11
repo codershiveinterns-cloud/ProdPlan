@@ -138,4 +138,52 @@ describe.skipIf(!available)("order status transitions (integration)", () => {
       await deleteTenant(other.tenant.id);
     }
   });
+
+  // docs/M2_SPEC.md §4/§5: the order-level ON_HOLD/release dialog must pause/resume every ScheduleEntry step and
+  // notify the office (+ floor). Regression for a blocker found in review: neither used to happen.
+  it("ON_HOLD via the order dialog pauses schedule entries and notifies other users; release restores them", async () => {
+    const id = await newOrder();
+    const workCenter = await prisma.workCenter.create({ data: { tenantId: f.tenant.id, code: "CNC", name: "CNC" } });
+    const machine = await prisma.machine.create({
+      data: { tenantId: f.tenant.id, workCenterId: workCenter.id, calendarId: f.calendar.id, code: "CNC-01", name: "CNC 01" },
+    });
+    const entry = await prisma.scheduleEntry.create({
+      data: {
+        tenantId: f.tenant.id,
+        orderId: id,
+        sequence: 10,
+        workCenterId: workCenter.id,
+        machineId: machine.id,
+        plannedStartAt: new Date(),
+        plannedEndAt: new Date(Date.now() + 3600_000),
+        plannedMinutes: 60,
+        status: "IN_PROGRESS",
+      },
+    });
+
+    // A second real user so the "exclude the actor" notify() rule has someone else to notify (the fixture's
+    // admin/planner/supervisor/viewer sessions all impersonate the same single seeded user).
+    const secondAdmin = await prisma.user.create({
+      data: { tenantId: f.tenant.id, email: `second-admin-${f.tenant.slug}@example.test`, name: "Second Admin", passwordHash: "x", role: "ADMIN" },
+    });
+
+    await changeOrderStatus(f.db, planner, { orderId: id, status: "ON_HOLD", reason: "Waiting for aluminium bar" });
+    const held = await prisma.scheduleEntry.findUniqueOrThrow({ where: { id: entry.id } });
+    expect(held.status).toBe("ON_HOLD");
+    expect(held.holdReason).toContain("IN_PROGRESS");
+
+    const notification = await prisma.notification.findFirst({
+      where: { tenantId: f.tenant.id, entityType: "Order", entityId: id, type: "ORDER_STATUS", userId: secondAdmin.id },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(notification).not.toBeNull();
+    expect(notification!.title).toContain("on hold");
+    // The actor (planner, sharing the fixture's single real user id) never notifies themselves.
+    expect(notification!.userId).not.toBe(planner.user.id);
+
+    await changeOrderStatus(f.db, supervisor, { orderId: id, status: "QUEUED" });
+    const released = await prisma.scheduleEntry.findUniqueOrThrow({ where: { id: entry.id } });
+    expect(released.status).toBe("IN_PROGRESS");
+    expect(released.holdReason).toBeNull();
+  });
 });

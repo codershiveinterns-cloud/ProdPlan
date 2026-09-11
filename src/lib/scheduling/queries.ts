@@ -390,9 +390,16 @@ export async function floorOperations(db: TenantDb, input: FloorOperationsInput)
   const dayEnd = new Date(`${addDays(input.date, 1)}T00:00:00.000Z`);
   const now = new Date();
 
-  const [machines, entries, downtimeNowRows] = await Promise.all([
+  const machineFilter = { ...(input.workCenterId ? { workCenterId: input.workCenterId } : {}), ...(input.machineId ? { id: input.machineId } : {}) };
+  // "Up next" must show genuinely different, further-out work — not a repeat of what's already on screen — so it
+  // is queried separately: QUEUED entries starting at/after tomorrow, capped so the read stays cheap regardless of
+  // backlog size (3 per machine is all the UI renders; a few hundred rows is comfortably enough to cover it even
+  // with many machines).
+  const UP_NEXT_SCAN_LIMIT = 300;
+
+  const [machines, entries, upNextRows, downtimeNowRows] = await Promise.all([
     db.machine.findMany({
-      where: { ...(input.workCenterId ? { workCenterId: input.workCenterId } : {}), ...(input.machineId ? { id: input.machineId } : {}) },
+      where: machineFilter,
       select: { id: true, code: true, name: true, workCenterId: true },
       orderBy: { code: "asc" },
     }),
@@ -402,8 +409,7 @@ export async function floorOperations(db: TenantDb, input: FloorOperationsInput)
         // earlier day (overdue) — both are captured by "starts before the end of today".
         status: { in: ["QUEUED", "IN_PROGRESS"] },
         plannedStartAt: { lt: dayEnd },
-        ...(input.workCenterId ? { workCenterId: input.workCenterId } : {}),
-        ...(input.machineId ? { machineId: input.machineId } : {}),
+        ...machineFilter,
       },
       select: {
         id: true,
@@ -417,40 +423,59 @@ export async function floorOperations(db: TenantDb, input: FloorOperationsInput)
       },
       orderBy: { plannedStartAt: "asc" },
     }),
+    db.scheduleEntry.findMany({
+      where: { status: "QUEUED", plannedStartAt: { gte: dayEnd }, ...machineFilter },
+      select: {
+        id: true,
+        orderId: true,
+        sequence: true,
+        machineId: true,
+        plannedStartAt: true,
+        plannedEndAt: true,
+        status: true,
+        order: { select: { orderNumber: true, quantity: true, product: { select: { sku: true, name: true } } } },
+      },
+      orderBy: { plannedStartAt: "asc" },
+      take: UP_NEXT_SCAN_LIMIT,
+    }),
     db.downtimeWindow.findMany({ where: { startsAt: { lte: now }, endsAt: { gt: now } }, select: { machineId: true } }),
   ]);
 
   const downtimeNow = new Set(downtimeNowRows.map((d) => d.machineId));
+  const toDTO = (e: (typeof entries)[number]): FloorOperationDTO => ({
+    id: e.id,
+    orderId: e.orderId,
+    orderNumber: e.order.orderNumber,
+    productSku: e.order.product.sku,
+    productName: e.order.product.name,
+    quantity: num(e.order.quantity),
+    sequence: e.sequence,
+    plannedStartAt: e.plannedStartAt.toISOString(),
+    plannedEndAt: e.plannedEndAt.toISOString(),
+    status: e.status,
+    overdue: e.plannedStartAt.getTime() < now.getTime() && e.status === "QUEUED",
+  });
   const byMachine = new Map<string, typeof entries>();
   for (const e of entries) {
     const list = byMachine.get(e.machineId) ?? [];
     list.push(e);
     byMachine.set(e.machineId, list);
   }
+  const upNextByMachine = new Map<string, typeof upNextRows>();
+  for (const e of upNextRows) {
+    const list = upNextByMachine.get(e.machineId) ?? [];
+    if (list.length < 3) list.push(e);
+    upNextByMachine.set(e.machineId, list);
+  }
 
-  return machines.map((m) => {
-    const rows = (byMachine.get(m.id) ?? []).map((e) => ({
-      id: e.id,
-      orderId: e.orderId,
-      orderNumber: e.order.orderNumber,
-      productSku: e.order.product.sku,
-      productName: e.order.product.name,
-      quantity: num(e.order.quantity),
-      sequence: e.sequence,
-      plannedStartAt: e.plannedStartAt.toISOString(),
-      plannedEndAt: e.plannedEndAt.toISOString(),
-      status: e.status,
-      overdue: e.plannedStartAt.getTime() < now.getTime() && e.status === "QUEUED",
-    }));
-    return {
-      id: m.id,
-      code: m.code,
-      name: m.name,
-      workCenterId: m.workCenterId,
-      downtimeNow: downtimeNow.has(m.id),
-      operations: rows,
-      upNext: rows.slice(0, 3),
-    };
-  });
+  return machines.map((m) => ({
+    id: m.id,
+    code: m.code,
+    name: m.name,
+    workCenterId: m.workCenterId,
+    downtimeNow: downtimeNow.has(m.id),
+    operations: (byMachine.get(m.id) ?? []).map(toDTO),
+    upNext: (upNextByMachine.get(m.id) ?? []).map(toDTO),
+  }));
 }
 

@@ -309,7 +309,7 @@ export function scheduleOrders(input: EngineInput, opts: EngineOptions): EngineR
         const state = machineState(m);
         // Steps of this order placed earlier in this loop cannot collide (they end before stepEarliest), so the
         // machine's free list is still valid without committing them first.
-        const p = placeWork(state.free, stepEarliest, minutes.plannedMinutes);
+        const p = placeWork(state.free, stepEarliest, minutes.plannedMinutes, state.occupied);
         if (!p) continue;
         if (!best || p.end < best.end || (p.end === best.end && m.code < best.machine.code)) {
           best = { machine: m, start: p.start, end: p.end, minutes };

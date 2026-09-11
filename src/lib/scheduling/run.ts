@@ -304,6 +304,10 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
 
   try {
     return await db.$transaction(async (tx) => {
+      // docs/M2_SPEC.md §2/§3: serialize concurrent schedule runs per tenant (two people dragging entries, or one
+      // dragging while another clicks "Run schedule", must not race each other's read-plan-write cycle) — same
+      // row-lock pattern M1 uses for the last-admin guard.
+      await tx.tenant.update({ where: { id: session.tenant.id }, data: { updatedAt: new Date() } });
       const loaded = await loadEngineInput(tx, startedAt, horizonEnd);
       const result = scheduleOrders(loaded.input, { now: startedAt, horizonDays, tz, defaultCalendarId: loaded.tenant.defaultCalendarId });
       const consideredIds = loaded.input.orders.map((o) => o.id);
