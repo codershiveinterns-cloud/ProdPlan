@@ -108,19 +108,23 @@ export function SiteHeader({
               <ul className="card-shadow w-80 animate-fade-in rounded-2xl bg-white p-2 ring-1 ring-stone-900/5">
                 {PRODUCT_MENU.map((item) => (
                   <li key={item.label}>
-                    <div aria-disabled="true" className="flex cursor-default flex-col gap-0.5 rounded-xl px-3 py-2.5">
+                    <a
+                      href={item.href}
+                      onClick={() => setProductOpen(false)}
+                      className="flex flex-col gap-0.5 rounded-xl px-3 py-2.5 outline-none transition-colors hover:bg-primary-soft focus-visible:bg-primary-soft focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
                       <span className="text-sm font-semibold text-foreground">{item.label}</span>
                       <span className="text-xs leading-5 text-stone-600">{item.description}</span>
-                    </div>
+                    </a>
                   </li>
                 ))}
               </ul>
             </div>
           </div>
           {NAV_LINKS.map((link) => (
-            <span key={link.href} aria-disabled="true" className={cn(NAV_ITEM, "cursor-default")}>
+            <a key={link.href} href={link.href} className={NAV_ITEM}>
               {link.label}
-            </span>
+            </a>
           ))}
         </nav>
 
@@ -133,9 +137,9 @@ export function SiteHeader({
             </Link>
           ) : (
             <>
-              <button type="button" disabled aria-disabled="true" className={cn(ctaClasses("ghost", "md"), "hidden cursor-not-allowed opacity-60 lg:inline-flex")}>
+              <Link href={appHref("/login")} className={cn(ctaClasses("ghost", "md"), "hidden lg:inline-flex")}>
                 Sign in
-              </button>
+              </Link>
               <div className="hidden lg:contents">{demoButton}</div>
               <Link href={appHref("/signup")} className={cn(ctaClasses("primary", "md"), "hidden lg:inline-flex")}>
                 Create your workspace
@@ -178,18 +182,26 @@ export function SiteHeader({
           <ul className="flex flex-col">
             {PRODUCT_MENU.map((item) => (
               <li key={item.label}>
-                <span aria-disabled="true" className="flex min-h-11 cursor-default items-center rounded-lg px-3 py-2 text-base font-medium text-stone-700">
+                <a
+                  href={item.href}
+                  onClick={close}
+                  className="flex min-h-11 items-center rounded-lg px-3 py-2 text-base font-medium text-stone-700 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
                   {item.label}
-                </span>
+                </a>
               </li>
             ))}
           </ul>
           <ul className="mt-2 flex flex-col border-t border-border pt-2">
             {NAV_LINKS.map((link) => (
               <li key={link.href}>
-                <span aria-disabled="true" className="flex min-h-11 cursor-default items-center rounded-lg px-3 py-2 text-base font-medium text-stone-700">
+                <a
+                  href={link.href}
+                  onClick={close}
+                  className="flex min-h-11 items-center rounded-lg px-3 py-2 text-base font-medium text-stone-700 outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+                >
                   {link.label}
-                </span>
+                </a>
               </li>
             ))}
           </ul>
@@ -205,9 +217,9 @@ export function SiteHeader({
                   Create your workspace
                   <ArrowRight aria-hidden="true" />
                 </Link>
-                <button type="button" disabled aria-disabled="true" className={ctaClasses("outline", "md", "w-full cursor-not-allowed opacity-60")}>
+                <Link href={appHref("/login")} onClick={close} className={ctaClasses("outline", "md", "w-full")}>
                   Sign in
-                </button>
+                </Link>
               </>
             )}
           </div>

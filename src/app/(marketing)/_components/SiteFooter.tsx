@@ -11,7 +11,7 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
   const account = signedIn
     ? [{ label: "Open dashboard", href: "/dashboard" }]
     : [
-        
+        { label: "Sign in", href: appHref("/login") },
         { label: "Create your workspace", href: appHref("/signup") },
       ];
 
@@ -31,11 +31,9 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {FOOTER.product.map((l) => (
                 <li key={l.label}>
-                  {l.href.startsWith("#") ? (
-                    <span aria-disabled="true" className={link}>{l.label}</span>
-                  ) : (
-                    <a href={l.href} className={link}>{l.label}</a>
-                  )}
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -48,11 +46,9 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {FOOTER.company.map((l) => (
                 <li key={l.label}>
-                  {l.href.startsWith("#") ? (
-                    <span aria-disabled="true" className={link}>{l.label}</span>
-                  ) : (
-                    <a href={l.href} className={link}>{l.label}</a>
-                  )}
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -65,11 +61,9 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
             <ul className="mt-3 flex flex-col">
               {account.map((l) => (
                 <li key={l.label}>
-                  {l.href.startsWith("#") ? (
-                    <span aria-disabled="true" className={link}>{l.label}</span>
-                  ) : (
-                    <a href={l.href} className={link}>{l.label}</a>
-                  )}
+                  <a href={l.href} className={link}>
+                    {l.label}
+                  </a>
                 </li>
               ))}
             </ul>
