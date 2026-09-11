@@ -26,6 +26,11 @@ export const PERMISSIONS = [
   "tenant:manage",
   "audit:read-all",
   "profile:self",
+  "schedule:read",
+  "schedule:run",
+  "schedule:move",
+  "operations:status",
+  "notifications:read",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -38,6 +43,8 @@ const READ_ALL: Permission[] = [
   "materials:read",
   "machines:read",
   "profile:self",
+  "schedule:read",
+  "notifications:read",
 ];
 
 const MATRIX: Record<Role, ReadonlySet<Permission>> = {
@@ -54,8 +61,11 @@ const MATRIX: Record<Role, ReadonlySet<Permission>> = {
     "stock:adjust",
     "machines:write",
     "downtime:write",
+    "schedule:run",
+    "schedule:move",
+    "operations:status",
   ]),
-  SUPERVISOR: new Set<Permission>([...READ_ALL, "orders:status", "stock:move", "downtime:write"]),
+  SUPERVISOR: new Set<Permission>([...READ_ALL, "orders:status", "stock:move", "downtime:write", "operations:status"]),
   VIEWER: new Set<Permission>(READ_ALL),
 };
 

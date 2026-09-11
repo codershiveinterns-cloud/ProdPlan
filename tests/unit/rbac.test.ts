@@ -26,6 +26,12 @@ const SPEC_TABLE: Record<Permission, Record<Role, boolean>> = {
   "tenant:manage": { ADMIN: true, PLANNER: false, SUPERVISOR: false, VIEWER: false },
   "audit:read-all": { ADMIN: true, PLANNER: false, SUPERVISOR: false, VIEWER: false },
   "profile:self": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: true },
+  // docs/M2_SPEC.md §2
+  "schedule:read": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: true },
+  "schedule:run": { ADMIN: true, PLANNER: true, SUPERVISOR: false, VIEWER: false },
+  "schedule:move": { ADMIN: true, PLANNER: true, SUPERVISOR: false, VIEWER: false },
+  "operations:status": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: false },
+  "notifications:read": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: true },
 };
 
 describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {

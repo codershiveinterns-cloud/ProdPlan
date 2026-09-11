@@ -75,6 +75,53 @@ enum AuditAction {
   LOGIN
 }
 
+
+enum OperationStatus {
+  QUEUED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  SKIPPED
+}
+
+enum DeliveryRisk {
+  ON_TRACK
+  AT_RISK
+  DELAYED
+  LATE
+}
+
+enum ConflictType {
+  MACHINE_OVERLOAD
+  MACHINE_UNAVAILABLE
+  MATERIAL_SHORTAGE
+  DEADLINE_AT_RISK
+  DEADLINE_MISSED
+  NO_ROUTING
+  NO_MACHINE
+  UNSCHEDULED
+}
+
+enum ConflictSeverity {
+  WARNING
+  CRITICAL
+}
+
+enum NotificationType {
+  SCHEDULE_RUN
+  SCHEDULE_CONFLICT
+  MATERIAL_SHORTAGE
+  DELIVERY_RISK
+  ORDER_STATUS
+  OPERATION_STATUS
+}
+
+enum ScheduleRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
 // ---------- platform ----------
 
 model Tenant {
@@ -84,6 +131,8 @@ model Tenant {
   timezone          String   @default("Asia/Kolkata")
   orderSeq          Int      @default(0)
   defaultCalendarId String?
+  scheduleHorizonDays Int    @default(30)
+  lastScheduleRunAt DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -105,6 +154,10 @@ model Tenant {
   orders             Order[]
   importBatches      ImportBatch[]
   auditLogs          AuditLog[]
+  scheduleRuns       ScheduleRun[]
+  scheduleEntries    ScheduleEntry[]
+  scheduleConflicts  ScheduleConflict[]
+  notifications      Notification[]
 }
 
 /// Login/signup rate limiting across serverless instances. Platform-level: no tenantId.
@@ -135,6 +188,7 @@ model User {
   createdDowntime       DowntimeWindow[] @relation("DowntimeCreatedBy")
   createdImportBatches  ImportBatch[]    @relation("ImportBatchCreatedBy")
   auditEntries          AuditLog[]       @relation("AuditActor")
+  notifications         Notification[]
 
   @@unique([tenantId, id])
   @@index([tenantId])
@@ -198,6 +252,7 @@ model ProductOperation {
   product    Product    @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
   workCenter WorkCenter @relation(fields: [tenantId, workCenterId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   machine    Machine?   @relation(fields: [machineId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduleEntries ScheduleEntry[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, productId, sequence])
@@ -222,6 +277,7 @@ model Material {
   tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   bomItems  BomItem[]
   movements StockMovement[]
+  scheduleConflicts ScheduleConflict[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
@@ -280,6 +336,7 @@ model WorkCenter {
   tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   machines   Machine[]
   operations ProductOperation[]
+  scheduleEntries ScheduleEntry[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
@@ -360,6 +417,8 @@ model Machine {
   calendar   ShiftCalendar      @relation(fields: [tenantId, calendarId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   downtime   DowntimeWindow[]
   operations ProductOperation[]
+  scheduleEntries   ScheduleEntry[]
+  scheduleConflicts ScheduleConflict[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
@@ -402,6 +461,12 @@ model Order {
   customerPoRef     String?
   notes             String?
   importBatchId     String?
+  deliveryRisk      DeliveryRisk  @default(ON_TRACK)
+  riskReason        String?
+  plannedStartAt    DateTime?
+  plannedEndAt      DateTime?
+  scheduledAt       DateTime?
+  scheduleDirty     Boolean       @default(true)
   createdById       String
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -411,9 +476,12 @@ model Order {
   product     Product      @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   importBatch ImportBatch? @relation(fields: [importBatchId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   createdBy   User         @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduleEntries   ScheduleEntry[]
+  scheduleConflicts ScheduleConflict[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, orderNumber])
+  @@index([tenantId, deliveryRisk])
   @@index([tenantId, dueDate])
   @@index([tenantId, status])
   @@index([tenantId, customerId])
@@ -441,6 +509,120 @@ model ImportBatch {
 
   @@unique([tenantId, id])
   @@index([tenantId, createdAt])
+}
+
+
+// ---------- scheduling ----------
+
+model ScheduleRun {
+  id                String            @id @default(cuid())
+  tenantId          String
+  status            ScheduleRunStatus @default(RUNNING)
+  trigger           String
+  triggeredById     String?
+  horizonDays       Int
+  startedAt         DateTime          @default(now())
+  finishedAt        DateTime?
+  ordersConsidered  Int               @default(0)
+  ordersScheduled   Int               @default(0)
+  conflictCount     Int               @default(0)
+  summary           Json?
+  error             String?
+
+  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entries   ScheduleEntry[]
+  conflicts ScheduleConflict[]
+
+  @@index([tenantId, startedAt])
+}
+
+/// One routing step of one order placed on one machine. `locked` entries were positioned by a planner (drag) and the
+/// engine never moves them; IN_PROGRESS / COMPLETED entries are fixed by reality.
+model ScheduleEntry {
+  id             String          @id @default(cuid())
+  tenantId       String
+  orderId        String
+  operationId    String?
+  sequence       Int
+  workCenterId   String
+  machineId      String
+  plannedStartAt DateTime
+  plannedEndAt   DateTime
+  plannedMinutes Int
+  setupMinutes   Int             @default(0)
+  runMinutes     Int             @default(0)
+  status         OperationStatus @default(QUEUED)
+  actualStartAt  DateTime?
+  actualEndAt    DateTime?
+  quantityDone   Decimal         @default(0) @db.Decimal(14, 3)
+  locked         Boolean         @default(false)
+  lockedById     String?
+  lockedAt       DateTime?
+  holdReason     String?
+  note           String?
+  runId          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  order      Order             @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  operation  ProductOperation? @relation(fields: [operationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  workCenter WorkCenter        @relation(fields: [tenantId, workCenterId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  machine    Machine           @relation(fields: [tenantId, machineId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
+  run        ScheduleRun?      @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  conflicts  ScheduleConflict[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, orderId, sequence])
+  @@index([tenantId, machineId, plannedStartAt])
+  @@index([tenantId, status])
+}
+
+model ScheduleConflict {
+  id         String           @id @default(cuid())
+  tenantId   String
+  runId      String?
+  type       ConflictType
+  severity   ConflictSeverity
+  orderId    String?
+  machineId  String?
+  materialId String?
+  entryId    String?
+  message    String
+  details    Json?
+  resolvedAt DateTime?
+  createdAt  DateTime         @default(now())
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  run      ScheduleRun?   @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  order    Order?         @relation(fields: [orderId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  machine  Machine?       @relation(fields: [machineId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  material Material?      @relation(fields: [materialId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  entry    ScheduleEntry? @relation(fields: [entryId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenantId, resolvedAt, createdAt])
+  @@index([tenantId, orderId])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  tenantId   String
+  userId     String
+  type       NotificationType
+  title      String
+  body       String
+  href       String?
+  entityType String?
+  entityId   String?
+  dedupeKey  String?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([tenantId, userId, readAt, createdAt])
+  @@index([tenantId, dedupeKey])
 }
 
 // ---------- audit ----------

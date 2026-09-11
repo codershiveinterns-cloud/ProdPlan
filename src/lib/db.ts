@@ -106,6 +106,10 @@ export const TENANT_SCOPED_MODELS: ReadonlySet<Prisma.ModelName> = new Set<Prism
   Prisma.ModelName.Order,
   Prisma.ModelName.ImportBatch,
   Prisma.ModelName.AuditLog,
+  "ScheduleRun",
+  "ScheduleEntry",
+  "ScheduleConflict",
+  "Notification",
 ]);
 
 /** Models WITHOUT a tenantId column. `Tenant` is handled by name below; anything else is denied through tenantDb(). */
@@ -121,6 +125,8 @@ export const PLATFORM_MODELS: ReadonlySet<Prisma.ModelName> = new Set<Prisma.Mod
 export const JSON_FIELDS: Readonly<Record<string, readonly string[]>> = {
   ImportBatch: ["rows"],
   AuditLog: ["before", "after"],
+  ScheduleRun: ["summary"],
+  ScheduleConflict: ["details"],
 };
 const JSON_FIELD_NAMES: ReadonlySet<string> = new Set(Object.values(JSON_FIELDS).flat());
 
@@ -266,6 +272,24 @@ function scopeNestedField(field: AnyRecord, tenantId: string, path: string): Any
   return out;
 }
 
+/** ScheduleConflict rows are append-only except for `resolvedAt` (docs/M2_SPEC.md §1). */
+const SCHEDULE_CONFLICT_UPDATABLE_FIELDS: ReadonlySet<string> = new Set(["resolvedAt"]);
+
+function assertScheduleConflictUpdate(data: unknown, operation: string): void {
+  const rows = Array.isArray(data) ? data : [data];
+  for (const row of rows) {
+    if (!isPlainObject(row)) continue;
+    const illegal = Object.keys(row).filter((k) => !SCHEDULE_CONFLICT_UPDATABLE_FIELDS.has(k));
+    if (illegal.length > 0) {
+      throw new TenantScopeError(
+        `ScheduleConflict.${operation}: only resolvedAt may be updated (got ${illegal.join(", ")})`,
+        Prisma.ModelName.ScheduleConflict,
+        operation,
+      );
+    }
+  }
+}
+
 function assertImportBatchUpdate(data: unknown, operation: string): void {
   const rows = Array.isArray(data) ? data : [data];
   for (const row of rows) {
@@ -361,11 +385,13 @@ export function scopeArgs(model: string, operation: string, rawArgs: unknown, te
     case "updateManyAndReturn":
       args.data = scopeWriteData(args.data, "update", tenantId);
       if (model === Prisma.ModelName.ImportBatch) assertImportBatchUpdate(args.data, operation);
+      if (model === Prisma.ModelName.ScheduleConflict) assertScheduleConflictUpdate(args.data, operation);
       break;
     case "upsert":
       args.create = scopeWriteData(args.create, "create", tenantId, "create");
       args.update = scopeWriteData(args.update, "update", tenantId, "update");
       if (model === Prisma.ModelName.ImportBatch) assertImportBatchUpdate(args.update, operation);
+      if (model === Prisma.ModelName.ScheduleConflict) assertScheduleConflictUpdate(args.update, operation);
       break;
     default:
       break;

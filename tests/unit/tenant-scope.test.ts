@@ -347,7 +347,7 @@ describe("scopeArgs — default deny and append-only rules", () => {
   });
 
   it("covers every model that is not Tenant/RateLimitBucket", () => {
-    expect(TENANT_SCOPED_MODELS.size).toBe(16);
+    expect(TENANT_SCOPED_MODELS.size).toBe(20);
     expect(TENANT_SCOPED_MODELS.has("Tenant" as never)).toBe(false);
     expect(TENANT_SCOPED_MODELS.has("RateLimitBucket" as never)).toBe(false);
   });
