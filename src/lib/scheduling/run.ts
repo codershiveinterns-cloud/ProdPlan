@@ -397,6 +397,12 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
           data: { plannedStartAt, plannedEndAt, deliveryRisk: r.deliveryRisk, riskReason, scheduledAt: startedAt, scheduleDirty: false },
         });
       }
+      // ON_HOLD orders are intentionally excluded from `loaded.orders`/the engine (their entries are frozen while
+      // held, per docs/M2_SPEC.md §2), so the loop above never sees them and could never clear their dirty flag —
+      // the board's "out of date" banner would then stay stuck forever once any order had gone on hold while
+      // dirty. A completed run has accounted for the plant's full current state; nothing an on-hold order's own
+      // flag is waiting on will ever arrive while it stays on hold, so clear it too.
+      await tx.order.updateMany({ where: { status: "ON_HOLD", scheduleDirty: true }, data: { scheduleDirty: false } });
 
       // 4. Tenant, run row, audit.
       const finishedAt = new Date();

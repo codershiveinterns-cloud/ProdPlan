@@ -111,6 +111,28 @@ describe.skipIf(!available)("runSchedule (integration)", () => {
     expect(runs.every((r) => r.status === "COMPLETED")).toBe(true);
   });
 
+  // Regression: ON_HOLD orders are excluded from the engine's input (their entries are frozen while held), so a
+  // run's per-order loop never sees them — before this fix their scheduleDirty flag could never be cleared,
+  // permanently stuck showing the "Schedule is out of date" banner even right after a successful run.
+  it("clears scheduleDirty on ON_HOLD orders too, even though they are never re-planned", async () => {
+    const c = await createTenantFixture({ slugPrefix: "sched-run-hold" });
+    try {
+      const seeded = await seedOnePlant(c);
+      await prisma.order.update({ where: { id: seeded.order.id }, data: { status: "ON_HOLD", scheduleDirty: true } });
+
+      const result = await runSchedule(c.db, sessionFor(c), ctxFor(c), { trigger: "manual", now: RUN_NOW });
+      expect(result.status).toBe("COMPLETED");
+
+      const held = await prisma.order.findUniqueOrThrow({ where: { id: seeded.order.id } });
+      expect(held.status).toBe("ON_HOLD");
+      expect(held.scheduleDirty).toBe(false);
+      // Held orders are excluded from the engine entirely: no entry is created/touched for them.
+      expect(await prisma.scheduleEntry.count({ where: { orderId: seeded.order.id } })).toBe(0);
+    } finally {
+      await deleteTenant(c.tenant.id);
+    }
+  });
+
   it("is strictly tenant-isolated: tenant B never sees tenant A's scheduling rows via the scoped client", async () => {
     await seedOnePlant(b);
     await runSchedule(b.db, sessionFor(b), ctxFor(b), { trigger: "manual", now: RUN_NOW });
