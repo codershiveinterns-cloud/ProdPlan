@@ -70,6 +70,11 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "tenant:manage",
           "audit:read-all",
           "profile:self",
+          "schedule:read",
+          "schedule:run",
+          "schedule:move",
+          "operations:status",
+          "notifications:read",
         ],
         "PLANNER": [
           "dashboard:read",
@@ -89,6 +94,11 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "machines:write",
           "downtime:write",
           "profile:self",
+          "schedule:read",
+          "schedule:run",
+          "schedule:move",
+          "operations:status",
+          "notifications:read",
         ],
         "SUPERVISOR": [
           "dashboard:read",
@@ -101,6 +111,9 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "machines:read",
           "downtime:write",
           "profile:self",
+          "schedule:read",
+          "operations:status",
+          "notifications:read",
         ],
         "VIEWER": [
           "dashboard:read",
@@ -110,6 +123,8 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "materials:read",
           "machines:read",
           "profile:self",
+          "schedule:read",
+          "notifications:read",
         ],
       }
     `);
