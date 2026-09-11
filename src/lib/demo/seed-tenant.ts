@@ -20,6 +20,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import type { AuditAction, OrderStatus } from "@/generated/prisma/enums";
 import { audit, changedFields, redactSnapshot, type AuditActor } from "@/lib/audit";
+import type { Session } from "@/lib/auth/guards";
 import type { UserDTO } from "@/lib/auth/user-dto";
 import { userSelect } from "@/lib/auth/user-dto";
 import { requiredPerUnit, round3 } from "@/lib/bom";
@@ -27,9 +28,12 @@ import { addDays, fromDateOnly, todayInTz, weekdayOf, zonedToUtc } from "@/lib/d
 import type { TenantDb, TenantTx } from "@/lib/db";
 import { DomainError } from "@/lib/errors";
 import { customerNameKey } from "@/lib/customers-normalize";
+import { logger } from "@/lib/logger";
 import { reservedOrderNumbers } from "@/lib/orders/numbers";
 import { transitionSummary } from "@/lib/orders/status";
 import { SEQUENCE_STEP } from "@/lib/routing";
+import { applyOperationTransition } from "@/lib/scheduling/operation-status";
+import { runSchedule } from "@/lib/scheduling/run";
 import { demoDataset, type DemoDataset, type DemoVariant } from "./demo-data";
 
 export const DEMO_NOT_EMPTY_MESSAGE = "Demo data can only be loaded into an empty plant";
@@ -153,7 +157,10 @@ export async function seedDemoData(
   const meta: RequestMeta = { ip: opts.ip ?? null, userAgent: opts.userAgent ?? null };
   const at = (dayOffset: number, hhmm: string): Date => zonedToUtc(addDays(today, dayOffset), hhmm, tz);
 
-  return db.$transaction(async (tx) => {
+  // Captured inside the transaction below, used afterwards to run the schedule as this actor (docs/M2_SPEC.md §6).
+  let seededAdmin: UserDTO | undefined;
+
+  const result = await db.$transaction(async (tx) => {
     // ---- 1. Guard: empty plant --------------------------------------------------------------------------------
     const [productCount, orderCount] = await Promise.all([tx.product.count(), tx.order.count()]);
     if (productCount > 0 || orderCount > 0) {
@@ -164,6 +171,7 @@ export async function seedDemoData(
     const users = await tx.user.findMany({ where: { isActive: true }, orderBy: { createdAt: "asc" }, select: userSelect });
     const admin: UserDTO | undefined = actor ?? users.find((u) => u.role === "ADMIN") ?? users[0];
     if (!admin) throw new DomainError("Demo data needs at least one active user in the plant");
+    seededAdmin = admin;
     const planner = users.find((u) => u.role === "PLANNER") ?? admin;
     const supervisor = users.find((u) => u.role === "SUPERVISOR") ?? planner;
 
@@ -740,6 +748,72 @@ export async function seedDemoData(
 
     return { variant, today, defaultCalendarId, orderNumbers: orderNumbersReserved, counts };
   }, TX_OPTIONS);
+
+  // ---- 13. Run the schedule (docs/M2_SPEC.md §6): board, conflicts and delivery risk exist as soon as the demo
+  // plant is loaded, exactly like the "Run schedule" action a real planner would take next. Best-effort: a seed
+  // load is not rolled back if this step fails, since the plant is already usable without a schedule run.
+  if (seededAdmin) {
+    try {
+      await bootstrapScheduleDemo(db, tenant, seededAdmin, now, meta);
+    } catch (err) {
+      logger.error("seedDemoData: schedule bootstrap failed (demo data itself was loaded successfully)", err);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Runs the engine once (`trigger: "seed"`), then puts two first-sequence operations of in-progress orders
+ * IN_PROGRESS with a realistic `actualStartAt` a few hours ago, and locks one further entry — so the schedule
+ * board demonstrates the "in progress" and locked-bar UI right after a demo load (docs/M2_SPEC.md §6).
+ */
+async function bootstrapScheduleDemo(db: TenantDb, tenant: DemoTenant, admin: UserDTO, now: Date, meta: RequestMeta): Promise<void> {
+  // `DemoTenant` (the exported parameter type) intentionally stays minimal; name/slug are only needed to build a
+  // full `Session` for the scheduling helpers below, so fetch them rather than widening the public type.
+  const tenantRow = await db.tenant.findFirstOrThrow({ select: { name: true, slug: true } });
+  const session: Session = {
+    user: admin,
+    tenant: { id: tenant.id, name: tenantRow.name, slug: tenantRow.slug, timezone: tenant.timezone, defaultCalendarId: tenant.defaultCalendarId },
+  };
+  const ctx = { actor: admin, ip: meta.ip, userAgent: meta.userAgent };
+
+  await runSchedule(db, session, ctx, { trigger: "seed", now });
+
+  // First-sequence QUEUED entries of orders already released to the floor — starting these never hits the
+  // previous-sequence gate.
+  const candidates = await db.scheduleEntry.findMany({
+    where: { status: "QUEUED", order: { status: "IN_PROGRESS" } },
+    orderBy: [{ orderId: "asc" }, { sequence: "asc" }],
+    select: { id: true, orderId: true },
+  });
+  const firstPerOrder: typeof candidates = [];
+  const seenOrders = new Set<string>();
+  for (const c of candidates) {
+    if (seenOrders.has(c.orderId)) continue;
+    seenOrders.add(c.orderId);
+    firstPerOrder.push(c);
+  }
+
+  const [inProgress1, inProgress2, toLock] = firstPerOrder;
+  if (inProgress1) {
+    await db.$transaction(
+      (tx) => applyOperationTransition(tx, session, ctx, { entryId: inProgress1.id, to: "IN_PROGRESS", now: new Date(now.getTime() - 3 * 60 * 60 * 1000) }),
+      TX_OPTIONS,
+    );
+  }
+  if (inProgress2) {
+    await db.$transaction(
+      (tx) => applyOperationTransition(tx, session, ctx, { entryId: inProgress2.id, to: "IN_PROGRESS", now: new Date(now.getTime() - 90 * 60 * 1000) }),
+      TX_OPTIONS,
+    );
+  }
+  if (toLock) {
+    await db.scheduleEntry.update({
+      where: { id: toLock.id },
+      data: { locked: true, lockedById: admin.id, lockedAt: new Date(now.getTime() - 20 * 60 * 1000) },
+    });
+  }
 }
 
 /** Exposed for tests: the dataset a variant seeds. */

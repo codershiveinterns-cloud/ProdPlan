@@ -19,11 +19,13 @@ import { historyActor, historyText } from "@/lib/orders/history";
 import { getOrderDetail, listOrderAudit } from "@/lib/orders/service";
 import { allowedTargets, isTerminal } from "@/lib/orders/status";
 import { can } from "@/lib/rbac";
+import { orderSchedule } from "@/lib/scheduling/queries";
 
 import { FlashToast } from "../_components/FlashToast";
 import { MaterialRequirement } from "../_components/MaterialRequirement";
 import { RoutingPreview } from "../_components/RoutingPreview";
 import { StatusDialog } from "../_components/StatusDialog";
+import { ScheduleCard } from "./_components/ScheduleCard";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
@@ -44,7 +46,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { session, db } = await requirePagePermission("orders:read");
   const { id } = await params;
-  const [order, auditRows] = await Promise.all([getOrderDetail(db, id), listOrderAudit(db, id)]);
+  const [order, auditRows, schedule] = await Promise.all([getOrderDetail(db, id), listOrderAudit(db, id), orderSchedule(db, id)]);
   if (!order) notFound();
 
   const tz = session.tenant.timezone;
@@ -170,6 +172,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <RoutingPreview rows={order.routing} totalMinutes={order.routingTotalMinutes} productId={order.product.id} />
             </div>
           </Card>
+
+          <ScheduleCard schedule={schedule} tz={tz} productUnit={order.product.unit} />
         </div>
 
         <Card className="self-start">

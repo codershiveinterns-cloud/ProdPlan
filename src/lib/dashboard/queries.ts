@@ -5,9 +5,9 @@
  * (`count` / `groupBy`), the three lists are single `findMany` calls with `include`, and there is no per-row
  * follow-up query. The first-run checklist counts are fetched only when the plant has no orders yet.
  */
-import type { DowntimeType, MachineStatus, OrderPriority, OrderStatus } from "@/generated/prisma/enums";
+import type { DeliveryRisk, DowntimeType, MachineStatus, OperationStatus, OrderPriority, OrderStatus } from "@/generated/prisma/enums";
 import type { TenantDb } from "@/lib/db";
-import { toDateOnly } from "@/lib/dates";
+import { addDays, toDateOnly } from "@/lib/dates";
 import {
   KPI_LIST_HREFS,
   OPEN_STATUSES,
@@ -20,12 +20,22 @@ import {
 } from "@/lib/orders/kpis";
 import { toPlain, type Plain } from "@/lib/serialize";
 
+/** Delivery risks that put an order on the "Delivery risk" tile (docs/M2_SPEC.md §6). */
+export const AT_RISK_DELIVERY_RISKS = ["AT_RISK", "DELAYED", "LATE"] as const satisfies readonly DeliveryRisk[];
+
+/** Rows shown on the "Today on the floor" mini-list. */
+export const TODAY_FLOOR_LIMIT = 8;
+
 export const DASHBOARD_LIST_LIMIT = 10;
 
 export type DashboardKpis = {
   orders: { open: number; overdue: number; dueSoon: number; inProgress: number };
   machines: { total: number; active: number; maintenance: number; inactive: number; downNow: number };
   materialsBelowReorder: number;
+  /** Open orders with deliveryRisk in AT_RISK / DELAYED / LATE. */
+  deliveryRisk: number;
+  /** Open (unresolved) schedule conflicts, CRITICAL or WARNING. */
+  scheduleConflicts: number;
 };
 
 export type DashboardTotals = {
@@ -49,6 +59,18 @@ export type DashboardOrderRow = {
   status: OrderStatus;
   /** `YYYY-MM-DD` */
   dueDate: string;
+  deliveryRisk: DeliveryRisk;
+};
+
+export type TodayFloorRow = {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  productSku: string;
+  machineCode: string;
+  sequence: number;
+  status: OperationStatus;
+  plannedStartAt: Date;
 };
 
 export type DashboardMachineRow = {
@@ -80,10 +102,24 @@ export type DashboardData = {
   kpis: DashboardKpis;
   totals: DashboardTotals;
   /** Tile links, identically filtered lists (spec §5 URL contract). */
-  hrefs: { open: string; overdue: string; dueSoon: string; inProgress: string; machines: string; materialsBelowReorder: string };
+  hrefs: {
+    open: string;
+    overdue: string;
+    dueSoon: string;
+    inProgress: string;
+    machines: string;
+    materialsBelowReorder: string;
+    deliveryRisk: string;
+    scheduleConflicts: string;
+    floor: string;
+  };
   ordersByDue: DashboardOrderRow[];
   machines: DashboardMachineRow[];
   activity: DashboardAuditRow[];
+  /** Today's scheduled operations, machine order then start time (docs/M2_SPEC.md §6 "Today on the floor"). */
+  todayFloor: TodayFloorRow[];
+  /** `Tenant.lastScheduleRunAt !== null` — drives setup checklist step 7. */
+  scheduleHasRun: boolean;
 };
 
 export type LoadDashboardOptions = {
@@ -105,8 +141,19 @@ const ORDERS_BY_DUE_SELECT = {
   priority: true,
   status: true,
   dueDate: true,
+  deliveryRisk: true,
   customer: { select: { name: true } },
   product: { select: { sku: true, name: true, unit: true } },
+} as const;
+
+const TODAY_FLOOR_SELECT = {
+  id: true,
+  orderId: true,
+  sequence: true,
+  status: true,
+  plannedStartAt: true,
+  machine: { select: { code: true } },
+  order: { select: { orderNumber: true, product: { select: { sku: true } } } },
 } as const;
 
 const MACHINE_SELECT = {
@@ -155,18 +202,21 @@ export async function getDashboardKpis(
   opts: Pick<LoadDashboardOptions, "today" | "now">,
 ): Promise<{ kpis: DashboardKpis; ordersTotal: number; activeWindows: ActiveWindow[] }> {
   const now = opts.now ?? new Date();
-  const [orderGroups, overdue, dueSoon, inProgress, machineGroups, activeWindows, materialsBelowReorder] = await Promise.all([
-    db.order.groupBy({ by: ["status"], _count: { _all: true } }),
-    db.order.count({ where: whereOverdue(opts.today) }),
-    db.order.count({ where: whereDueWithin(opts.today) }),
-    db.order.count({ where: whereInProgress() }),
-    db.machine.groupBy({ by: ["status"], _count: { _all: true } }),
-    db.downtimeWindow.findMany({
-      where: whereActiveDowntime(now),
-      select: { machineId: true, type: true, endsAt: true, reason: true, machine: { select: { status: true } } },
-    }),
-    db.material.count({ where: whereBelowReorder(db.material.fields.reorderThreshold) }),
-  ]);
+  const [orderGroups, overdue, dueSoon, inProgress, machineGroups, activeWindows, materialsBelowReorder, deliveryRisk, scheduleConflicts] =
+    await Promise.all([
+      db.order.groupBy({ by: ["status"], _count: { _all: true } }),
+      db.order.count({ where: whereOverdue(opts.today) }),
+      db.order.count({ where: whereDueWithin(opts.today) }),
+      db.order.count({ where: whereInProgress() }),
+      db.machine.groupBy({ by: ["status"], _count: { _all: true } }),
+      db.downtimeWindow.findMany({
+        where: whereActiveDowntime(now),
+        select: { machineId: true, type: true, endsAt: true, reason: true, machine: { select: { status: true } } },
+      }),
+      db.material.count({ where: whereBelowReorder(db.material.fields.reorderThreshold) }),
+      db.order.count({ where: { status: { in: [...OPEN_STATUSES] }, deliveryRisk: { in: [...AT_RISK_DELIVERY_RISKS] } } }),
+      db.scheduleConflict.count({ where: { resolvedAt: null, severity: { in: ["CRITICAL", "WARNING"] } } }),
+    ]);
 
   const byOrderStatus = countByStatus(orderGroups);
   const ordersTotal = orderGroups.reduce((sum, g) => sum + g._count._all, 0);
@@ -190,6 +240,8 @@ export async function getDashboardKpis(
         downNow,
       },
       materialsBelowReorder,
+      deliveryRisk,
+      scheduleConflicts,
     },
     ordersTotal,
     activeWindows,
@@ -201,7 +253,10 @@ export async function loadDashboard(db: TenantDb, opts: LoadDashboardOptions): P
   const now = opts.now ?? new Date();
   const today = opts.today;
 
-  const [{ kpis, ordersTotal, activeWindows }, orders, machines, machineTotal, audit] = await Promise.all([
+  const dayEnd = new Date(`${addDays(today, 1)}T00:00:00.000Z`);
+  const dayStart = new Date(`${today}T00:00:00.000Z`);
+
+  const [{ kpis, ordersTotal, activeWindows }, orders, machines, machineTotal, audit, todayFloorRows, tenant] = await Promise.all([
     getDashboardKpis(db, { today, now }),
     db.order.findMany({
       where: whereOpen(),
@@ -221,6 +276,13 @@ export async function loadDashboard(db: TenantDb, opts: LoadDashboardOptions): P
       take: DASHBOARD_LIST_LIMIT,
       select: AUDIT_SELECT,
     }),
+    db.scheduleEntry.findMany({
+      where: { plannedStartAt: { gte: dayStart, lt: dayEnd } },
+      orderBy: [{ machine: { code: "asc" } }, { plannedStartAt: "asc" }],
+      take: TODAY_FLOOR_LIMIT,
+      select: TODAY_FLOOR_SELECT,
+    }),
+    db.tenant.findFirst({ select: { lastScheduleRunAt: true } }),
   ]);
 
   // First-run checklist counts are only needed while the plant has no orders.
@@ -255,6 +317,9 @@ export async function loadDashboard(db: TenantDb, opts: LoadDashboardOptions): P
       inProgress: KPI_LIST_HREFS.inProgress(),
       machines: "/machines",
       materialsBelowReorder: "/materials?belowThreshold=1",
+      deliveryRisk: `/orders?risk=${AT_RISK_DELIVERY_RISKS.join(",")}`,
+      scheduleConflicts: "/schedule/conflicts",
+      floor: "/floor",
     },
     ordersByDue: orders.map((o) => ({
       id: o.id,
@@ -267,6 +332,7 @@ export async function loadDashboard(db: TenantDb, opts: LoadDashboardOptions): P
       priority: o.priority,
       status: o.status,
       dueDate: toDateOnly(o.dueDate),
+      deliveryRisk: o.deliveryRisk,
     })),
     machines: machines.map((m) => {
       const w = windowsByMachine.get(m.id);
@@ -281,18 +347,29 @@ export async function loadDashboard(db: TenantDb, opts: LoadDashboardOptions): P
       };
     }),
     activity: audit.map((row) => toPlain(row)),
+    todayFloor: todayFloorRows.map((e) => ({
+      id: e.id,
+      orderId: e.orderId,
+      orderNumber: e.order.orderNumber,
+      productSku: e.order.product.sku,
+      machineCode: e.machine.code,
+      sequence: e.sequence,
+      status: e.status,
+      plannedStartAt: e.plannedStartAt,
+    })),
+    scheduleHasRun: tenant?.lastScheduleRunAt != null,
   };
 }
 
-/** The six first-run steps (spec §6.6), with their done checks from the totals. */
+/** The seven first-run steps (docs/M2_SPEC.md §6), with their done checks from the totals. */
 export type SetupStep = {
-  key: "workCenters" | "calendar" | "machines" | "materials" | "products" | "orders";
+  key: "workCenters" | "calendar" | "machines" | "materials" | "products" | "orders" | "schedule";
   title: string;
   description: string;
   done: boolean;
 };
 
-export function setupSteps(totals: DashboardTotals): SetupStep[] {
+export function setupSteps(totals: DashboardTotals, scheduleHasRun: boolean = false): SetupStep[] {
   return [
     { key: "workCenters", title: "Add work centers", description: "Group machines by the stage they serve — CNC, assembly, paint.", done: totals.workCenters > 0 },
     { key: "calendar", title: "Review shift calendar", description: "Check the default shifts and add holidays so capacity is right.", done: totals.calendars > 0 },
@@ -300,5 +377,6 @@ export function setupSteps(totals: DashboardTotals): SetupStep[] {
     { key: "materials", title: "Add materials", description: "Raw materials and parts with reorder thresholds and stock on hand.", done: totals.materials > 0 },
     { key: "products", title: "Add products & BOM", description: "What you make, what it consumes, and the routing it follows.", done: totals.products > 0 },
     { key: "orders", title: "Create your first order", description: "Or import a CSV of open orders from your ERP.", done: totals.orders > 0 },
+    { key: "schedule", title: "Run the schedule", description: "Build the plan, spot conflicts and see delivery risk across open orders.", done: scheduleHasRun },
   ];
 }

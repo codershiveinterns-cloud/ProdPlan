@@ -1,4 +1,5 @@
 import { FilterBar } from "@/components/data/FilterBar";
+import { DELIVERY_RISK_META, DELIVERY_RISKS } from "@/components/data/DeliveryRiskBadge";
 import { DateInput } from "@/components/forms/DateInput";
 import { FormField } from "@/components/forms/FormField";
 import { ORDER_PRIORITY_META } from "@/components/data/PriorityBadge";
@@ -54,6 +55,16 @@ export function OrdersFilters({ params, customers, clearHref = "/orders", hideCu
           </select>
         </FormField>
       )}
+      <FormField label="Delivery risk" htmlFor="filter-risk">
+        <select name="risk" defaultValue={params.risk} className={SELECT_CLASS}>
+          <option value="">Any</option>
+          {DELIVERY_RISKS.map((r) => (
+            <option key={r} value={r}>
+              {DELIVERY_RISK_META[r].label}
+            </option>
+          ))}
+        </select>
+      </FormField>
       <FormField label="Due from" htmlFor="filter-dueFrom">
         <DateInput name="dueFrom" defaultValue={params.dueFrom || undefined} className="md:w-40" />
       </FormField>

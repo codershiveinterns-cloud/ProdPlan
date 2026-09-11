@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, Boxes, CalendarClock, ClipboardList, Cog } from "lucide-react";
+import { Activity, AlertTriangle, Boxes, CalendarClock, CalendarRange, ClipboardList, Cog, TrendingDown } from "lucide-react";
 
 import { StatCard } from "@/components/data/StatCard";
 import type { DashboardData } from "@/lib/dashboard/queries";
@@ -61,6 +61,27 @@ export function KpiTiles({ kpis, hrefs }: { kpis: DashboardData["kpis"]; hrefs: 
             icon={Boxes}
             tone={kpis.materialsBelowReorder > 0 ? "warn" : "default"}
             hint={kpis.materialsBelowReorder > 0 ? "Stock on hand at or below the reorder threshold" : "All materials above threshold"}
+          />
+        </div>
+      </div>
+      <div>
+        <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">Schedule</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            label="Delivery risk"
+            value={formatInt(kpis.deliveryRisk)}
+            href={hrefs.deliveryRisk}
+            icon={TrendingDown}
+            tone={kpis.deliveryRisk > 0 ? "warn" : "default"}
+            hint={kpis.deliveryRisk > 0 ? "Open orders at risk, delayed or late" : "No open orders at risk"}
+          />
+          <StatCard
+            label="Schedule conflicts"
+            value={formatInt(kpis.scheduleConflicts)}
+            href={hrefs.scheduleConflicts}
+            icon={CalendarRange}
+            tone={kpis.scheduleConflicts > 0 ? "danger" : "default"}
+            hint={kpis.scheduleConflicts > 0 ? "Open critical and warning conflicts" : "No open conflicts"}
           />
         </div>
       </div>

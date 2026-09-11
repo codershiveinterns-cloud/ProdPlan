@@ -19,6 +19,7 @@ import {
   setMaterialActive,
   updateMaterial,
 } from "@/lib/materials/service";
+import { markScheduleDirty } from "@/lib/scheduling/dirty";
 import { recordStockMovement } from "@/lib/stock";
 import { materialSchema, stockMovementSchema } from "@/lib/validation/materials";
 
@@ -108,6 +109,8 @@ export const recordMovementAction = withAction(async (formData: FormData): Promi
   const input = parseForm(stockMovementSchema, formData);
   const ctx = await auditContext(session);
   const result = await recordStockMovement(db, session, ctx, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateMaterial(input.materialId);
   return ok(
     undefined,

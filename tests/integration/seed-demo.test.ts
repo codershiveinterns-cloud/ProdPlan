@@ -265,7 +265,10 @@ describe.skipIf(!available)("seedDemoData (integration)", () => {
     expect(imports[0].entityId).toBe(acme.tenant.id);
     expect(imports[0].entityLabel).toContain("24 orders");
     expect(imports[0].actorUserId).toBe(acme.admin.id);
-    expect(rows).toHaveLength(result.counts.auditRows);
+    // seedDemoData() runs the schedule and puts operations IN_PROGRESS right after (docs/M2_SPEC.md §6); those
+    // rows are written outside the seed's own transaction, so they are on top of `result.counts.auditRows`.
+    const scheduleBootstrapRows = byType("ScheduleRun", "UPDATE").length + byType("ScheduleEntry", "STATUS_CHANGE").length;
+    expect(rows).toHaveLength(result.counts.auditRows + scheduleBootstrapRows);
     for (const r of rows) {
       expect(r.summary.length).toBeGreaterThan(0);
       expect(r.actorUserId).toBe(acme.admin.id);

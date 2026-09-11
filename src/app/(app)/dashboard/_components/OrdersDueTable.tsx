@@ -6,8 +6,28 @@ import { DueHint, dueHint } from "@/components/data/DueHint";
 import { EmptyState } from "@/components/data/EmptyState";
 import { PriorityBadge } from "@/components/data/PriorityBadge";
 import { StatusBadge } from "@/components/data/StatusBadge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { DeliveryRisk } from "@/generated/prisma/enums";
 import type { DashboardOrderRow } from "@/lib/dashboard/queries";
+import { cn } from "@/lib/utils";
+
+/** Colour semantics for delivery risk (docs/M2_SPEC.md §6): ON_TRACK slate, AT_RISK amber, DELAYED orange, LATE red. */
+const DELIVERY_RISK_META: Record<DeliveryRisk, { label: string; className: string }> = {
+  ON_TRACK: { label: "On track", className: "border-slate-200 bg-slate-100 text-slate-700" },
+  AT_RISK: { label: "At risk", className: "border-amber-200 bg-amber-50 text-amber-800" },
+  DELAYED: { label: "Delayed", className: "border-orange-200 bg-orange-50 text-orange-800" },
+  LATE: { label: "Late", className: "border-red-200 bg-red-50 text-red-700" },
+};
+
+export function RiskBadge({ risk, className }: { risk: DeliveryRisk; className?: string }) {
+  const meta = DELIVERY_RISK_META[risk];
+  return (
+    <Badge variant="outline" className={cn(meta.className, className)}>
+      {meta.label}
+    </Badge>
+  );
+}
 
 /** Row DTO with the strings the Server Component page already formatted. */
 export type OrdersDueRow = DashboardOrderRow & { quantityLabel: string; dueDateLabel: string };
@@ -51,6 +71,7 @@ export function OrdersDueTable({ rows, today, canCreate }: { rows: OrdersDueRow[
     },
     { key: "priority", header: "Priority", priority: 3, render: (o) => <PriorityBadge priority={o.priority} /> },
     { key: "status", header: "Status", priority: 1, render: (o) => <StatusBadge status={o.status} /> },
+    { key: "risk", header: "Risk", priority: 2, render: (o) => <RiskBadge risk={o.deliveryRisk} /> },
   ];
 
   return (

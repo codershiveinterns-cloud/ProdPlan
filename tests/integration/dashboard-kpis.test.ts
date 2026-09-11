@@ -114,8 +114,9 @@ describe.skipIf(!available)("dashboard queries (integration)", () => {
     expect(admin.activity).toHaveLength(DASHBOARD_LIST_LIMIT);
     const times = admin.activity.map((a) => a.createdAt);
     expect([...times].sort().reverse()).toEqual(times);
-    // The IMPORT summary row is the newest; it is a plant-wide event visible to every role.
-    expect(admin.activity[0]).toMatchObject({ entityType: "DemoData", action: "IMPORT" });
+    // seedDemoData() runs the schedule and puts two operations IN_PROGRESS right after loading the demo plant
+    // (docs/M2_SPEC.md §6); those STATUS_CHANGE rows are written after — and so are newer than — the IMPORT row.
+    expect(admin.activity[0]).toMatchObject({ entityType: "ScheduleEntry", action: "STATUS_CHANGE" });
     expect(typeof admin.activity[0].createdAt).toBe("string");
 
     // A fresh User row (e.g. an invite) shows for admins only; VIEWER/PLANNER/SUPERVISOR never see User/Tenant rows.
@@ -135,11 +136,11 @@ describe.skipIf(!available)("dashboard queries (integration)", () => {
     });
     const adminAfter = await loadDashboard(fx.db, { today, now: NOW, includeSensitiveAudit: true });
     expect(adminAfter.activity[0]).toMatchObject({ entityType: "User", action: "CREATE" });
-    expect(adminAfter.activity[1]).toMatchObject({ entityType: "DemoData", action: "IMPORT" });
+    expect(adminAfter.activity[1]).toMatchObject({ entityType: "ScheduleEntry", action: "STATUS_CHANGE" });
 
     const viewer = await loadDashboard(fx.db, { today, now: NOW, includeSensitiveAudit: false });
     expect(viewer.activity).toHaveLength(DASHBOARD_LIST_LIMIT);
-    expect(viewer.activity[0]).toMatchObject({ entityType: "DemoData", action: "IMPORT" });
+    expect(viewer.activity[0]).toMatchObject({ entityType: "ScheduleEntry", action: "STATUS_CHANGE" });
     expect(viewer.activity.some((a) => a.entityType === "Tenant" || a.entityType === "User")).toBe(false);
     const sensitive = await prisma.auditLog.count({ where: { tenantId: fx.tenant.id, entityType: { in: ["Tenant", "User"] } } });
     expect(sensitive).toBeGreaterThanOrEqual(2); // the seed's default-calendar Tenant row + the invite above
@@ -154,9 +155,9 @@ describe.skipIf(!available)("dashboard queries (integration)", () => {
     expect(data.ordersByDue).toEqual([]);
     expect(data.machines).toEqual([]);
 
-    const steps = setupSteps(data.totals);
-    expect(steps.map((s) => s.key)).toEqual(["workCenters", "calendar", "machines", "materials", "products", "orders"]);
-    expect(steps.map((s) => s.done)).toEqual([false, true, false, false, false, false]);
+    const steps = setupSteps(data.totals, data.scheduleHasRun);
+    expect(steps.map((s) => s.key)).toEqual(["workCenters", "calendar", "machines", "materials", "products", "orders", "schedule"]);
+    expect(steps.map((s) => s.done)).toEqual([false, true, false, false, false, false, false]);
 
     await prisma.workCenter.create({ data: { tenantId: empty.tenant.id, code: "WC1", name: "First" } });
     const after = await loadDashboard(empty.db, { today, now: NOW, includeSensitiveAudit: false });

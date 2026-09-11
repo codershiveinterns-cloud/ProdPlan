@@ -53,7 +53,7 @@ describe.skipIf(!available)("orders list + detail (integration)", () => {
 
   it("parses the URL contract with defaults and ignores garbage", () => {
     const p = parseOrderListParams({});
-    expect(p).toEqual({ q: "", page: 1, sort: "dueDate", dir: "asc", status: "open", priority: "", customerId: "", dueFrom: "", dueTo: "", batch: "" });
+    expect(p).toEqual({ q: "", page: 1, sort: "dueDate", dir: "asc", status: "open", priority: "", customerId: "", dueFrom: "", dueTo: "", batch: "", risk: "" });
     expect(countActiveOrderFilters(p)).toBe(0);
     expect(orderListQuery(p)).toBe("");
     const q = parseOrderListParams({ q: " so-1 ", page: "3", sort: "customer", dir: "DESC", status: "completed,cancelled", priority: "urgent", customerId: "abc", dueFrom: "2030-01-05", dueTo: "not-a-date", batch: "b1" });

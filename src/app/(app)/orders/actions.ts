@@ -11,6 +11,7 @@ import { editOrderFormSchema } from "@/lib/orders/forms";
 import { commitImport, discardImport, previewImport } from "@/lib/orders/import";
 import { changeOrderStatus, createOrder, updateOrder, type OrderPatch } from "@/lib/orders/service";
 import { editableFields, isTerminal, STATUS_LABELS } from "@/lib/orders/status";
+import { markScheduleDirty } from "@/lib/scheduling/dirty";
 import { idField } from "@/lib/validation/common";
 import { createOrderSchema, editOrderNotesSchema, statusChangeSchema } from "@/lib/validation/orders";
 
@@ -25,6 +26,8 @@ export const createOrderAction = withAction(async (formData) => {
   const { session, db } = await requirePermission("orders:write");
   const input = parseForm(createOrderSchema(todayInTz(session.tenant.timezone)), formData);
   const order = await createOrder(db, session, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { orderIds: [order.id] });
   revalidateOrders(order.id);
   redirect(`/orders/${order.id}?flash=created`);
 });
@@ -62,6 +65,8 @@ export const updateOrderAction = withAction(async (formData) => {
     };
   }
   await updateOrder(db, session, orderId, patch);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { orderIds: [orderId] });
   revalidateOrders(orderId);
   redirect(`/orders/${orderId}?flash=updated`);
 });
@@ -70,6 +75,8 @@ export const changeStatusAction = withAction(async (formData) => {
   const { session, db } = await requirePermission("orders:status");
   const input = parseForm(statusChangeSchema, formData);
   const order = await changeOrderStatus(db, session, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { orderIds: [order.id] });
   revalidateOrders(order.id);
   return ok(undefined, `Order ${order.orderNumber} is now ${STATUS_LABELS[order.status].toLowerCase()}`);
 });
@@ -87,7 +94,12 @@ export const previewImportAction = withAction(async (formData) => {
 export const commitImportAction = withAction(async (formData) => {
   const { session, db } = await requirePermission("orders:write");
   const batchId = idField("import").parse(formData.get("batchId"));
-  await commitImport(db, session, batchId);
+  const result = await commitImport(db, session, batchId);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  if (result.orderNumbers.length > 0) {
+    const created = await db.order.findMany({ where: { orderNumber: { in: result.orderNumbers } }, select: { id: true } });
+    await markScheduleDirty(db, { orderIds: created.map((o) => o.id) });
+  }
   revalidateOrders();
   redirect(`/orders/import?batch=${encodeURIComponent(batchId)}`);
 });

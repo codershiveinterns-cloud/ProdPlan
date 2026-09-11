@@ -24,6 +24,7 @@ import {
   updateProduct,
 } from "@/lib/products/mutations";
 import { bomItemUpdateSchema, productOperationUpdateSchema, productUpdateSchema } from "@/lib/products/schemas";
+import { markScheduleDirty } from "@/lib/scheduling/dirty";
 import { bomItemSchema, moveOperationSchema, productOperationSchema, productSchema } from "@/lib/validation/products";
 
 /** `withAction()` plus the module's field-level domain errors → `fieldErrors`. */
@@ -100,6 +101,8 @@ export const addBomItemAction = withProductAction(async (formData) => {
   const { session, db } = await requirePermission("products:write");
   const input = parseForm(bomItemSchema, formData);
   await addBomItem(db, session, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateProduct(input.productId);
   return ok(undefined, "Material added to the BOM");
 });
@@ -108,6 +111,8 @@ export const updateBomItemAction = withProductAction(async (formData) => {
   const { session, db } = await requirePermission("products:write");
   const { bomItemId, ...input } = parseForm(bomItemUpdateSchema, formData);
   await updateBomItem(db, session, bomItemId, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateProduct(input.productId);
   return ok(undefined, "BOM line saved");
 });
@@ -117,6 +122,8 @@ export async function removeBomItemAction(productId: string, bomItemId: string, 
   return withProductAction(async () => {
     const { session, db } = await requirePermission("products:write");
     await removeBomItem(db, session, bomItemId);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateProduct(productId);
     return ok(undefined, "Material removed from the BOM");
   })(null, formData);
@@ -130,6 +137,8 @@ export const addOperationAction = withProductAction(async (formData) => {
   const { session, db } = await requirePermission("products:write");
   const input = parseForm(productOperationSchema, formData);
   await addOperation(db, session, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateProduct(input.productId);
   return ok(undefined, "Routing step added");
 });
@@ -138,6 +147,8 @@ export const updateOperationAction = withProductAction(async (formData) => {
   const { session, db } = await requirePermission("products:write");
   const { operationId, ...input } = parseForm(productOperationUpdateSchema, formData);
   await updateOperation(db, session, operationId, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateProduct(input.productId);
   return ok(undefined, "Routing step saved");
 });
@@ -147,6 +158,8 @@ export async function removeOperationAction(productId: string, operationId: stri
   return withProductAction(async () => {
     const { session, db } = await requirePermission("products:write");
     await removeOperation(db, session, operationId);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateProduct(productId);
     return ok(undefined, "Routing step removed");
   })(null, formData);
@@ -157,6 +170,10 @@ export const moveOperationAction = withProductAction(async (formData) => {
   const { session, db } = await requirePermission("products:write");
   const input = parseForm(moveOperationSchema, formData);
   const result = await moveOperation(db, session, input);
-  if (result.moved) revalidateProduct(input.productId);
+  if (result.moved) {
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
+    revalidateProduct(input.productId);
+  }
   return ok(result);
 });

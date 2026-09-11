@@ -19,6 +19,7 @@ import { LoadDemoDataButton } from "./_components/LoadDemoDataButton";
 import { MachinesTable, type MachineRow } from "./_components/MachinesTable";
 import { OrdersDueTable, type OrdersDueRow } from "./_components/OrdersDueTable";
 import { SetupChecklist, type SetupChecklistItem } from "./_components/SetupChecklist";
+import { TodayFloorList, type TodayFloorRow } from "./_components/TodayFloorList";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -53,6 +54,8 @@ function checklistItems(steps: SetupStep[], role: Role, defaultCalendarId: strin
         return writable("orders:write")
           ? { ...step, action: { href: "/orders/new", label: "Create order" }, secondary: { href: "/orders/import", label: "Import CSV" } }
           : { ...step, action: { href: "/orders", label: "View orders" } };
+      case "schedule":
+        return { ...step, action: { href: "/schedule", label: step.done ? "View schedule" : "Run the schedule" } };
     }
   });
 }
@@ -75,6 +78,11 @@ export default async function DashboardPage() {
     ...o,
     quantityLabel: formatQty(o.quantity, o.unit),
     dueDateLabel: formatDate(o.dueDate),
+  }));
+
+  const floorRows: TodayFloorRow[] = data.todayFloor.map((e) => ({
+    ...e,
+    plannedStartLabel: formatTime(e.plannedStartAt, tz),
   }));
 
   const machineRows: MachineRow[] = data.machines.map((m) => ({
@@ -127,7 +135,7 @@ export default async function DashboardPage() {
 
       {firstRun ? (
         <SetupChecklist
-          items={checklistItems(setupSteps(data.totals), role, session.tenant.defaultCalendarId)}
+          items={checklistItems(setupSteps(data.totals, data.scheduleHasRun), role, session.tenant.defaultCalendarId)}
           extra={canLoadDemo ? <LoadDemoDataButton /> : undefined}
         />
       ) : null}
@@ -143,6 +151,15 @@ export default async function DashboardPage() {
             flush
           >
             <OrdersDueTable rows={orderRows} today={today} canCreate={canCreateOrders} />
+          </DashboardSection>
+
+          <DashboardSection
+            title="Today on the floor"
+            description="Operations scheduled to start today, by machine."
+            viewAll={{ href: data.hrefs.floor, label: "View all" }}
+            flush
+          >
+            <TodayFloorList rows={floorRows} />
           </DashboardSection>
 
           <DashboardSection

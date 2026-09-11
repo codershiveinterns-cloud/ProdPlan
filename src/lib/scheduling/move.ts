@@ -14,10 +14,10 @@ import { addDays, todayInTz } from "@/lib/dates";
 import type { TenantDb } from "@/lib/db";
 import { DomainError, NotFoundError } from "@/lib/errors";
 import { runSchedule, type ScheduleRunResult } from "./run";
+import { MOVE_SNAP_MINUTES } from "./constants";
 import { downtimeIntervals, placeWork, roundToMinutes, subtractIntervals, workingWindows, type Interval } from "./windows";
 
-/** Horizontal drag snaps to this grid (spec §3). */
-export const MOVE_SNAP_MINUTES = 15;
+export { MOVE_SNAP_MINUTES };
 
 /** How far ahead of the drop instant the target machine's working windows are computed (generous — a locked entry
  *  dropped near a long holiday run still finds the next working instant). */

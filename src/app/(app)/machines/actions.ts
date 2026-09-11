@@ -9,6 +9,7 @@ import { requirePermission } from "@/lib/auth/guards";
 import { formFlag, moduleAction, runModuleAction } from "@/lib/machines/action-helpers";
 import { createDowntime, deleteDowntime, updateDowntime } from "@/lib/machines/downtime";
 import { createMachine, deleteMachine, setMachineStatus, updateMachine } from "@/lib/machines/machines";
+import { markScheduleDirty } from "@/lib/scheduling/dirty";
 import { downtimeSchema, machineSchema, machineStatusField } from "@/lib/validation/machines";
 
 function revalidateMachine(id?: string): void {
@@ -24,6 +25,8 @@ export const createMachineAction = moduleAction(async (formData) => {
   const { session, db } = await requirePermission("machines:write");
   const input = parseForm(machineSchema, formData);
   const m = await createMachine(db, session, input);
+  // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+  await markScheduleDirty(db, { all: true });
   revalidateMachine(m.id);
   redirect(`/machines/${m.id}?saved=created`);
 });
@@ -34,6 +37,8 @@ export async function updateMachineAction(id: string, prev: ActionState, formDat
     const { session, db } = await requirePermission("machines:write");
     const input = parseForm(machineSchema, fd);
     const m = await updateMachine(db, session, id, input);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateMachine(m.id);
     redirect(`/machines/${m.id}?saved=updated`);
   })(prev, formData);
@@ -72,6 +77,8 @@ export async function createDowntimeAction(machineId: string, prev: ActionState,
     fd.set("machineId", machineId);
     const input = parseForm(downtimeSchema, fd);
     await createDowntime(db, session, machineId, { ...input, confirmOverlap: formFlag(fd, "confirmOverlap") });
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateMachine(machineId);
     return ok(undefined, "Downtime window added");
   })(prev, formData);
@@ -89,6 +96,8 @@ export async function updateDowntimeAction(
     fd.set("machineId", machineId);
     const input = parseForm(downtimeSchema, fd);
     await updateDowntime(db, session, id, { ...input, confirmOverlap: formFlag(fd, "confirmOverlap") });
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateMachine(machineId);
     return ok(undefined, "Downtime window saved");
   })(prev, formData);
@@ -99,6 +108,8 @@ export async function deleteDowntimeAction(id: string, machineId: string, formDa
   return runModuleAction(formData, async () => {
     const { session, db } = await requirePermission("downtime:write");
     await deleteDowntime(db, session, id);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateMachine(machineId);
     return ok(undefined, "Downtime window removed");
   });

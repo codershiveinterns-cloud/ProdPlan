@@ -1,6 +1,7 @@
 import {
   Boxes,
   CalendarClock,
+  CalendarRange,
   ClipboardList,
   Cog,
   Factory,
@@ -8,6 +9,7 @@ import {
   Package,
   Settings,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +36,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: "dashboard:read" },
       { label: "Orders", href: "/orders", icon: ClipboardList, permission: "orders:read" },
+      { label: "Schedule", href: "/schedule", icon: CalendarRange, permission: "schedule:read" },
+      { label: "Floor", href: "/floor", icon: Wrench, permission: "schedule:read" },
     ],
   },
   {

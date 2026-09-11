@@ -2,10 +2,11 @@
  * Orders list query (docs/M1_SPEC.md §5 "List URL contract", §6.1).
  *
  * URL params: `q`, `page` (1-based, 25/page), `sort`, `dir`, plus `status` (comma list; default `open`; `all`),
- * `priority`, `customerId`, `dueFrom`, `dueTo`, `batch` (import batch id). Everything is filtered, sorted and
+ * `priority`, `customerId`, `dueFrom`, `dueTo`, `batch` (import batch id), `risk` (comma list of DeliveryRisk,
+ * docs/M2_SPEC.md §3 — same pattern as `status`, empty means "any risk"). Everything is filtered, sorted and
  * paginated server-side; default sort is `dueDate asc`. Rows are mapped to plain DTOs for the table.
  */
-import type { OrderPriority, OrderStatus } from "@/generated/prisma/enums";
+import type { DeliveryRisk, OrderPriority, OrderStatus } from "@/generated/prisma/enums";
 import type { OrderOrderByWithRelationInput, OrderWhereInput } from "@/generated/prisma/models";
 import type { SortDir } from "@/components/data/DataTable";
 import { fromDateOnly, isIsoDate, toDateOnly } from "@/lib/dates";
@@ -14,6 +15,8 @@ import { parseStatusFilter } from "@/lib/orders/kpis";
 import { ORDER_PRIORITIES } from "@/lib/orders/status";
 
 export const ORDERS_PAGE_SIZE = 25;
+
+const DELIVERY_RISKS = ["ON_TRACK", "AT_RISK", "DELAYED", "LATE"] as const satisfies readonly DeliveryRisk[];
 
 export const ORDER_SORT_KEYS = [
   "orderNumber",
@@ -50,6 +53,8 @@ export type OrderListParams = {
   dueTo: string;
   /** ImportBatch id or "". */
   batch: string;
+  /** Comma list of DeliveryRisk, or "" for any risk (docs/M2_SPEC.md §3). */
+  risk: string;
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -66,6 +71,16 @@ function idParam(v: string): string {
 function dateParam(v: string): string {
   const s = v.trim();
   return isIsoDate(s) ? s : "";
+}
+
+/** Comma list of DeliveryRisk (same pattern as `status`): unknown tokens dropped, nothing valid → "" (any risk). */
+function parseRiskFilter(param: string | string[] | undefined): { value: string; risks: DeliveryRisk[] | null } {
+  const raw = (Array.isArray(param) ? param.join(",") : (param ?? "")).trim().toUpperCase();
+  if (raw === "") return { value: "", risks: null };
+  const tokens = raw.split(",").map((t) => t.trim().replace(/[\s-]+/g, "_"));
+  const risks = DELIVERY_RISKS.filter((r) => tokens.includes(r));
+  if (risks.length === 0) return { value: "", risks: null };
+  return { value: risks.join(","), risks };
 }
 
 export function parseOrderListParams(sp: SearchParams): OrderListParams {
@@ -90,6 +105,7 @@ export function parseOrderListParams(sp: SearchParams): OrderListParams {
     dueFrom: dateParam(first(sp.dueFrom)),
     dueTo: dateParam(first(sp.dueTo)),
     batch: idParam(first(sp.batch)),
+    risk: parseRiskFilter(sp.risk).value,
   };
 }
 
@@ -104,6 +120,7 @@ export function orderListQuery(params: Partial<OrderListParams>): string {
   if (params.dueFrom) sp.set("dueFrom", params.dueFrom);
   if (params.dueTo) sp.set("dueTo", params.dueTo);
   if (params.batch) sp.set("batch", params.batch);
+  if (params.risk) sp.set("risk", params.risk);
   const sort = params.sort ?? DEFAULT_ORDER_SORT;
   const dir = params.dir ?? DEFAULT_ORDER_DIR;
   if (sort !== DEFAULT_ORDER_SORT || dir !== DEFAULT_ORDER_DIR) {
@@ -124,6 +141,7 @@ export function countActiveOrderFilters(params: OrderListParams): number {
   if (params.dueFrom) n++;
   if (params.dueTo) n++;
   if (params.batch) n++;
+  if (params.risk) n++;
   return n;
 }
 
@@ -134,6 +152,8 @@ export function orderListWhere(params: OrderListParams): OrderWhereInput {
   if (params.dueFrom) and.push({ dueDate: { gte: fromDateOnly(params.dueFrom) } });
   if (params.dueTo) and.push({ dueDate: { lte: fromDateOnly(params.dueTo) } });
   if (params.batch) and.push({ importBatchId: params.batch });
+  const riskFilter = parseRiskFilter(params.risk);
+  if (riskFilter.risks) and.push({ deliveryRisk: { in: riskFilter.risks } });
   if (params.q) {
     const contains = { contains: params.q, mode: "insensitive" as const };
     and.push({
@@ -192,6 +212,7 @@ export type OrderListRow = {
   /** ISO instant */
   createdAt: string;
   customerPoRef: string | null;
+  deliveryRisk: DeliveryRisk;
 };
 
 export const orderListSelect = {
@@ -205,6 +226,7 @@ export const orderListSelect = {
   status: true,
   createdAt: true,
   customerPoRef: true,
+  deliveryRisk: true,
   customer: { select: { name: true } },
   product: { select: { sku: true, name: true, unit: true } },
 } as const;
@@ -220,6 +242,7 @@ type OrderListRecord = {
   status: OrderStatus;
   createdAt: Date;
   customerPoRef: string | null;
+  deliveryRisk: DeliveryRisk;
   customer: { name: string };
   product: { sku: string; name: string; unit: string };
 };
@@ -240,6 +263,7 @@ export function toOrderListRow(o: OrderListRecord): OrderListRow {
     status: o.status,
     createdAt: o.createdAt.toISOString(),
     customerPoRef: o.customerPoRef,
+    deliveryRisk: o.deliveryRisk,
   };
 }
 

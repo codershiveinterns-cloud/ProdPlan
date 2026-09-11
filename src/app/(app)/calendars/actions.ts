@@ -16,6 +16,7 @@ import {
 import { addException, deleteException, updateException } from "@/lib/calendars/exceptions";
 import { addShift, deleteShift, updateShift } from "@/lib/calendars/shifts";
 import { formFlag, moduleAction, runModuleAction } from "@/lib/machines/action-helpers";
+import { markScheduleDirty } from "@/lib/scheduling/dirty";
 import { calendarExceptionSchema, calendarSchema, renameCalendarSchema, shiftSchema } from "@/lib/validation/calendars";
 
 function revalidateCalendar(id?: string): void {
@@ -50,6 +51,8 @@ export async function setDefaultCalendarAction(id: string, formData: FormData): 
   return runModuleAction(formData, async () => {
     const { session, db } = await requirePermission("machines:write");
     await setDefaultCalendar(db, session, id);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(id);
     revalidatePath("/settings/tenant");
     return ok(undefined, "Default calendar updated. New machines will use it; existing machines keep their calendar.");
@@ -84,6 +87,8 @@ export async function addShiftAction(calendarId: string, prev: ActionState, form
     const { session, db } = await requirePermission("machines:write");
     const input = parseForm(shiftSchema, fd);
     const s = await addShift(db, session, calendarId, input);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, `Shift ${s.name} added`);
   })(prev, formData);
@@ -95,6 +100,8 @@ export async function updateShiftAction(id: string, calendarId: string, prev: Ac
     const { session, db } = await requirePermission("machines:write");
     const input = parseForm(shiftSchema, fd);
     const s = await updateShift(db, session, id, input);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, `Shift ${s.name} saved`);
   })(prev, formData);
@@ -105,6 +112,8 @@ export async function deleteShiftAction(id: string, calendarId: string, formData
   return runModuleAction(formData, async () => {
     const { session, db } = await requirePermission("machines:write");
     await deleteShift(db, session, id);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, "Shift removed");
   });
@@ -118,6 +127,8 @@ export async function addExceptionAction(calendarId: string, prev: ActionState, 
     const { session, db } = await requirePermission("machines:write");
     const input = parseForm(calendarExceptionSchema, fd);
     await addException(db, session, calendarId, input);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, "Exception added");
   })(prev, formData);
@@ -134,6 +145,8 @@ export async function updateExceptionAction(
     const { session, db } = await requirePermission("machines:write");
     const input = parseForm(calendarExceptionSchema, fd);
     await updateException(db, session, id, input);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, "Exception saved");
   })(prev, formData);
@@ -143,6 +156,8 @@ export async function deleteExceptionAction(id: string, calendarId: string, form
   return runModuleAction(formData, async () => {
     const { session, db } = await requirePermission("machines:write");
     await deleteException(db, session, id);
+    // docs/M2_SPEC.md §2: keep the schedule board's "out of date" banner accurate
+    await markScheduleDirty(db, { all: true });
     revalidateCalendar(calendarId);
     return ok(undefined, "Exception removed");
   });

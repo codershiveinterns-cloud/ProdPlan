@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import type { Role } from "@/generated/prisma/enums";
 import { DataTable, type DataTableColumn, type DataTableSort } from "@/components/data/DataTable";
+import { DeliveryRiskBadge } from "@/components/data/DeliveryRiskBadge";
 import { DueHint } from "@/components/data/DueHint";
 import { PriorityBadge } from "@/components/data/PriorityBadge";
 import { StatusBadge } from "@/components/data/StatusBadge";
@@ -94,6 +95,12 @@ export function OrdersTable({ rows, today, tz, role, sort, caption, emptyState, 
       ),
     },
     { key: "status", header: "Status", priority: 1, sortKey: "status", render: (o) => <StatusBadge status={o.status} /> },
+    {
+      key: "deliveryRisk",
+      header: "Delivery risk",
+      priority: 2,
+      render: (o) => <DeliveryRiskBadge risk={o.deliveryRisk} />,
+    },
     {
       key: "created",
       header: "Created",
