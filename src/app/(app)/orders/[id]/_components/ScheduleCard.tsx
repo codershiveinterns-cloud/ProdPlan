@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
 
-import { DeliveryRiskBadge } from "@/components/data/DeliveryRiskBadge";
+import { DeliveryRiskBadge, RiskCauseIndicator } from "@/components/data/DeliveryRiskBadge";
 import { EmptyState } from "@/components/data/EmptyState";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toDateOnly } from "@/lib/dates";
 import { formatDateTime, formatQty, formatTime } from "@/lib/format";
 import type { OrderScheduleDTO } from "@/lib/scheduling/queries";
+import type { RiskCause } from "@/generated/prisma/enums";
 
 import { OperationStatusBadge } from "@/app/(app)/floor/_components/OperationStatusBadge";
 
@@ -14,6 +15,12 @@ export type ScheduleCardProps = {
   schedule: OrderScheduleDTO;
   tz: string;
   productUnit: string;
+  /**
+   * `Order.riskCause` (docs/M3_SPEC.md §2/§6). Optional because `OrderScheduleDTO` (src/lib/scheduling/queries.ts,
+   * not owned by this file) does not select it yet — pass `order.riskCause` from the page once that DTO is
+   * extended; the cause line simply does not render while this is omitted.
+   */
+  riskCause?: RiskCause;
 };
 
 /**
@@ -21,7 +28,7 @@ export type ScheduleCardProps = {
  * status, quantity done vs order quantity), the delivery risk badge + reason, and an "Open on board" link. Handles
  * the not-yet-scheduled case with an EmptyState.
  */
-export function ScheduleCard({ schedule, tz, productUnit }: ScheduleCardProps) {
+export function ScheduleCard({ schedule, tz, productUnit, riskCause }: ScheduleCardProps) {
   const boardHref = (() => {
     if (!schedule || schedule.steps.length === 0) return "/schedule";
     const first = schedule.steps[0]!;
@@ -40,6 +47,7 @@ export function ScheduleCard({ schedule, tz, productUnit }: ScheduleCardProps) {
           {schedule ? (
             <div className="flex flex-col items-end gap-1">
               <DeliveryRiskBadge risk={schedule.deliveryRisk} />
+              {riskCause && riskCause !== "NONE" ? <RiskCauseIndicator cause={riskCause} /> : null}
               {schedule.riskReason ? (
                 <span className="max-w-64 text-right text-xs text-muted-foreground">{schedule.riskReason}</span>
               ) : null}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { timeZoneOffsetLabel, timeZoneOptions } from "@/lib/auth/timezones";
+import { isResendConfigured } from "@/lib/email/send";
 import { listCalendarOptions } from "@/lib/tenant/settings";
 
 import { requirePagePermission } from "../_lib/guard";
@@ -32,12 +33,23 @@ export default async function TenantSettingsPage() {
             The plant timezone drives “today”, due-date hints and every shift calendar calculation.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
           <TenantSettingsForm
             tenant={{ name: tenant.name, timezone: tenant.timezone, defaultCalendarId: tenant.defaultCalendarId }}
             calendars={calendars}
             timezones={timezones}
           />
+          {/* docs/M3_SPEC.md §7: read-only, honest status — never a fake "sent" claim. */}
+          <p className="text-sm text-muted-foreground">
+            Email delivery:{" "}
+            {isResendConfigured() ? (
+              <span className="font-medium text-foreground">connected via Resend</span>
+            ) : (
+              <span className="font-medium text-foreground">
+                not configured — emails are logged, not sent (ask your developer to add RESEND_API_KEY)
+              </span>
+            )}
+          </p>
         </CardContent>
       </Card>
       <Card size="sm" className="h-fit">

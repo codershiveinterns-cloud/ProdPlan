@@ -157,4 +157,4 @@ export type EngineResult = {
   loads: MachineLoad[];
 };
 
-export type ScheduleTrigger = "manual" | "move" | "status" | "seed";
+export type ScheduleTrigger = "manual" | "move" | "status" | "seed" | "optimization";

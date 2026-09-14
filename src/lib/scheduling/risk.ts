@@ -7,7 +7,7 @@
  *            due date, or the order has a material shortage, or it is unscheduled with a due date inside the horizon;
  *   ON_TRACK otherwise.
  */
-import type { DeliveryRisk } from "@/generated/prisma/enums";
+import type { DeliveryRisk, RiskCause } from "@/generated/prisma/enums";
 import { addDays, compareDateOnly, diffDays, endOfDayInTz, startOfDayInTz, todayInTz } from "@/lib/dates";
 
 export const RISK_ORDER: readonly DeliveryRisk[] = ["ON_TRACK", "AT_RISK", "DELAYED", "LATE"];
@@ -20,6 +20,12 @@ export const RISK_LABELS: Record<DeliveryRisk, string> = {
 };
 
 export type ShortageSummary = { code: string; shortBy: number; unit: string };
+
+/**
+ * How long a fixed (locked/started) `ScheduleEntry`'s `actualStartAt` may run behind its own `plannedStartAt`
+ * before it counts as an upstream delay for `RiskCause` purposes (docs/M3_SPEC.md §2).
+ */
+export const UPSTREAM_DELAY_THRESHOLD_MINUTES = 60;
 
 export type ClassifyRiskInput = {
   plannedEndAt?: Date | null;
@@ -36,9 +42,36 @@ export type ClassifyRiskInput = {
   lastMachineCode?: string | null;
   /** Working-day predicate used for the "within 1 working day" rule; default: every day works. */
   isWorkingDay?: (isoDate: string) => boolean;
+  /**
+   * docs/M3_SPEC.md §2: at least one fixed (locked/started) ScheduleEntry's `actualStartAt` runs more than
+   * `UPSTREAM_DELAY_THRESHOLD_MINUTES` behind its own `plannedStartAt`. Drives `RiskCause` only — it does not
+   * change the DeliveryRisk level itself. Defaults to `false`.
+   */
+  hasUpstreamDelay?: boolean;
 };
 
-export type RiskResult = { risk: DeliveryRisk; reason: string | null };
+export type RiskResult = { risk: DeliveryRisk; reason: string | null; cause: RiskCause };
+
+/**
+ * docs/M3_SPEC.md §2 precedence: MATERIAL (a shortage dominates regardless of timing) > UPSTREAM_DELAY (real
+ * execution of an earlier step is already running behind plan) > CAPACITY (anything else that is not ON_TRACK) >
+ * NONE. Exported so callers that already know the risk level (e.g. `run.ts`, which gets `deliveryRisk` from the
+ * engine's `EngineOrderResult` instead of calling `classifyRisk()` itself) can derive the cause without
+ * re-deriving the risk classification.
+ */
+export function riskCauseFor(risk: DeliveryRisk, hasShortage: boolean, hasUpstreamDelay: boolean): RiskCause {
+  if (hasShortage) return "MATERIAL";
+  if (hasUpstreamDelay) return "UPSTREAM_DELAY";
+  if (risk !== "ON_TRACK") return "CAPACITY";
+  return "NONE";
+}
+
+export const RISK_CAUSE_LABELS: Record<RiskCause, string> = {
+  NONE: "—",
+  MATERIAL: "Material shortage",
+  CAPACITY: "Machine capacity",
+  UPSTREAM_DELAY: "Upstream delay",
+};
 
 /** Compares two risks by severity (ON_TRACK < AT_RISK < DELAYED < LATE). */
 export function riskRank(risk: DeliveryRisk): number {
@@ -108,27 +141,33 @@ export function classifyRisk(input: ClassifyRiskInput): RiskResult {
   const { tz, now, dueDate } = input;
   const today = todayInTz(tz, now);
   const dueEnd = endOfDayInTz(dueDate, tz);
+  const hasUpstreamDelay = input.hasUpstreamDelay ?? false;
+  const withCause = (risk: DeliveryRisk, reason: string | null): RiskResult => ({
+    risk,
+    reason,
+    cause: riskCauseFor(risk, input.hasShortage, hasUpstreamDelay),
+  });
 
   if (compareDateOnly(today, dueDate) > 0) {
-    return { risk: "LATE", reason: riskReason.late(dueDate, today) };
+    return withCause("LATE", riskReason.late(dueDate, today));
   }
 
   const end = input.scheduled && input.plannedEndAt ? input.plannedEndAt : null;
   if (end && end.getTime() > dueEnd.getTime()) {
-    return { risk: "DELAYED", reason: riskReason.delayed(end, dueEnd, input.lastMachineCode) };
+    return withCause("DELAYED", riskReason.delayed(end, dueEnd, input.lastMachineCode));
   }
 
   if (input.hasShortage) {
     const reason = input.shortage ? riskReason.shortage(input.shortage) : "Material shortage";
-    return { risk: "AT_RISK", reason };
+    return withCause("AT_RISK", reason);
   }
 
   if (!end) {
     if (dueEnd.getTime() <= input.horizonEnd.getTime()) {
       const horizonDays = Math.round((input.horizonEnd.getTime() - startOfDayInTz(today, tz).getTime()) / 86_400_000);
-      return { risk: "AT_RISK", reason: horizonDays > 0 ? riskReason.unscheduled(horizonDays) : riskReason.unscheduledGeneric() };
+      return withCause("AT_RISK", horizonDays > 0 ? riskReason.unscheduled(horizonDays) : riskReason.unscheduledGeneric());
     }
-    return { risk: "ON_TRACK", reason: null };
+    return withCause("ON_TRACK", null);
   }
 
   // Last 10 % of the remaining lead time (measured from now to the end of the due date).
@@ -138,7 +177,7 @@ export function classifyRisk(input: ClassifyRiskInput): RiskResult {
   const isWorking = input.isWorkingDay ?? (() => true);
   const oneWorkingDayFrom = startOfDayInTz(previousWorkingDay(dueDate, isWorking), tz).getTime();
   if (end.getTime() >= tightFrom || end.getTime() >= oneWorkingDayFrom) {
-    return { risk: "AT_RISK", reason: riskReason.tight(end, dueEnd, input.lastMachineCode) };
+    return withCause("AT_RISK", riskReason.tight(end, dueEnd, input.lastMachineCode));
   }
-  return { risk: "ON_TRACK", reason: null };
+  return withCause("ON_TRACK", null);
 }

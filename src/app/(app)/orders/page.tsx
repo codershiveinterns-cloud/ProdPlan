@@ -8,6 +8,7 @@ import { SearchInput } from "@/components/data/SearchInput";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExportButton } from "@/components/export/ExportButton";
 import { todayInTz } from "@/lib/dates";
 import { listCustomerOptions } from "@/lib/customers";
 import { requirePagePermission } from "@/lib/orders/guard";
@@ -31,6 +32,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const activeFilters = countActiveOrderFilters(params);
   const filtered = activeFilters > 0 || params.q !== "";
   const canWrite = can(session.user.role, "orders:write");
+  const canExport = can(session.user.role, "exports:create");
 
   return (
     <>
@@ -39,19 +41,27 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         title="Orders"
         description="Customer orders and their production status."
         actions={
-          canWrite ? (
-            <>
-              <Button variant="outline" asChild>
-                <Link href="/orders/import">
-                  <Upload data-icon="inline-start" />
-                  Import CSV
-                </Link>
-              </Button>
-              <Button asChild>
-                <Link href="/orders/new">New order</Link>
-              </Button>
-            </>
-          ) : undefined
+          <>
+            {canExport ? (
+              <ExportButton
+                kind="ORDERS"
+                filters={{ q: params.q, status: params.status, priority: params.priority, customerId: params.customerId, dueFrom: params.dueFrom, dueTo: params.dueTo, batch: params.batch, risk: params.risk }}
+              />
+            ) : null}
+            {canWrite ? (
+              <>
+                <Button variant="outline" asChild>
+                  <Link href="/orders/import">
+                    <Upload data-icon="inline-start" />
+                    Import CSV
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link href="/orders/new">New order</Link>
+                </Button>
+              </>
+            ) : null}
+          </>
         }
       />
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">

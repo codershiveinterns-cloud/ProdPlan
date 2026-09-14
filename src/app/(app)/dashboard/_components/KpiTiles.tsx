@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, Boxes, CalendarClock, CalendarRange, ClipboardList, Cog, TrendingDown } from "lucide-react";
+import { Activity, AlertTriangle, Boxes, CalendarClock, CalendarRange, ClipboardList, Cog, Lightbulb, TrendingDown } from "lucide-react";
 
 import { StatCard } from "@/components/data/StatCard";
 import type { DashboardData } from "@/lib/dashboard/queries";
@@ -14,7 +14,16 @@ export function machinesHint(m: DashboardData["kpis"]["machines"]): { active: st
 }
 
 /** Orders + Resources KPI tiles (spec §6.6). Every tile links to the identically filtered list. */
-export function KpiTiles({ kpis, hrefs }: { kpis: DashboardData["kpis"]; hrefs: DashboardData["hrefs"] }) {
+export function KpiTiles({
+  kpis,
+  hrefs,
+  pendingSuggestions,
+}: {
+  kpis: DashboardData["kpis"];
+  hrefs: DashboardData["hrefs"];
+  /** Count of PENDING `OptimizationSuggestion` rows (docs/M3_SPEC.md §6) — undefined hides the tile. */
+  pendingSuggestions?: number;
+}) {
   const m = machinesHint(kpis.machines);
   return (
     <div className="flex flex-col gap-4">
@@ -83,6 +92,16 @@ export function KpiTiles({ kpis, hrefs }: { kpis: DashboardData["kpis"]; hrefs: 
             tone={kpis.scheduleConflicts > 0 ? "danger" : "default"}
             hint={kpis.scheduleConflicts > 0 ? "Open critical and warning conflicts" : "No open conflicts"}
           />
+          {pendingSuggestions !== undefined ? (
+            <StatCard
+              label="Optimization suggestions"
+              value={formatInt(pendingSuggestions)}
+              href="/schedule/optimize"
+              icon={Lightbulb}
+              tone={pendingSuggestions > 0 ? "warn" : "default"}
+              hint={pendingSuggestions > 0 ? "Improving changes ready to review" : "No improving changes found right now"}
+            />
+          ) : null}
         </div>
       </div>
     </div>

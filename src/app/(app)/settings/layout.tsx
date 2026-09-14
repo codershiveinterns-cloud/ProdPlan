@@ -20,6 +20,7 @@ export default async function SettingsLayout({ children }: { children: ReactNode
     ...(canInTenant(session.user.role, session.tenant, "tenant:manage") ? [{ label: "Tenant", href: "/settings/tenant" }] : []),
     ...(canInTenant(session.user.role, session.tenant, "users:manage") ? [{ label: "Users", href: "/settings/users" }] : []),
     { label: "Profile", href: "/settings/profile" },
+    ...(canInTenant(session.user.role, session.tenant, "audit:read-all") ? [{ label: "Audit", href: "/settings/audit" }] : []),
   ];
 
   return (

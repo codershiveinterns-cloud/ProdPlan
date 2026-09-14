@@ -35,6 +35,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const canRun = can(session.user.role, "schedule:run");
   const canMove = can(session.user.role, "schedule:move");
   const canAddMachines = can(session.user.role, "machines:write");
+  const canExport = can(session.user.role, "exports:create");
 
   const entryIds = board.workCenters.flatMap((wc) => wc.machines.flatMap((m) => m.entries.map((e) => e.id)));
   const orderIds = [...new Set(board.workCenters.flatMap((wc) => wc.machines.flatMap((m) => m.entries.map((e) => e.orderId))))];
@@ -82,6 +83,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
         conflictCount={conflicts.total}
         lastRunLabel={lastRunLabel}
         canRun={canRun}
+        canExport={canExport}
       />
 
       {hasMachines ? (

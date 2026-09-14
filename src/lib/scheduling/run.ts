@@ -15,17 +15,20 @@
  * given the same `ScheduleRunEvent`) for callers that want to react to a run beyond the built-in notifications.
  */
 import type { Prisma } from "@/generated/prisma/client";
-import type { ConflictSeverity, ConflictType, DeliveryRisk, OperationStatus } from "@/generated/prisma/enums";
+import type { ConflictSeverity, ConflictType, DeliveryRisk, OperationStatus, RiskCause } from "@/generated/prisma/enums";
 import { audit, type AuditCtx } from "@/lib/audit";
 import type { Session } from "@/lib/auth/guards";
 import type { Calendar, Downtime } from "@/lib/calendar";
 import { addDays, startOfDayInTz, toDateOnly, todayInTz } from "@/lib/dates";
 import type { TenantDb, TenantTx } from "@/lib/db";
 import { logger } from "@/lib/logger";
-import { conflictDetected, deliveryRiskChanged, scheduleRunFinished, type ConflictSubject } from "@/lib/notifications/events";
+import { conflictDetected, deliveryRiskChanged, PLANNING_ROLES, scheduleRunFinished, type ConflictSubject } from "@/lib/notifications/events";
 import { notify } from "@/lib/notifications/service";
+import { absoluteAppUrl, resolveEmailRecipients, sendEmail } from "@/lib/email/send";
+import { conflictLineTitle } from "@/lib/email/templates";
 import { OPEN_ORDER_STATUSES } from "./dirty";
 import { MAX_HORIZON_DAYS, scheduleOrders } from "./engine";
+import { riskCauseFor, UPSTREAM_DELAY_THRESHOLD_MINUTES } from "./risk";
 import type { EngineEntry, EngineInput, EngineMachine, EngineOrder, EngineStats, ScheduleTrigger } from "./types";
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -130,15 +133,18 @@ const num = (v: { toString(): string } | number | null | undefined): number => (
 // Input loading
 // ---------------------------------------------------------------------------------------------------------------
 
-type LoadedInput = {
+// Exported (docs/M3_SPEC.md §3): `src/lib/optimization/apply.ts` re-verifies a suggestion by loading the SAME
+// engine input `runSchedule()` would use and re-running `generateSuggestions()` against it — calling into this
+// loader instead of duplicating its ~100 lines of query/shaping logic.
+export type LoadedInput = {
   input: EngineInput;
-  orders: { id: string; orderNumber: string; deliveryRisk: DeliveryRisk; riskReason: string | null; plannedStartAt: Date | null; plannedEndAt: Date | null; scheduleDirty: boolean }[];
+  orders: { id: string; orderNumber: string; deliveryRisk: DeliveryRisk; riskReason: string | null; riskCause: RiskCause; plannedStartAt: Date | null; plannedEndAt: Date | null; scheduleDirty: boolean }[];
   machinesById: Map<string, EngineMachine>;
   materialsById: Map<string, { code: string }>;
   tenant: { timezone: string; scheduleHorizonDays: number; defaultCalendarId: string | null };
 };
 
-async function loadEngineInput(db: TenantDb | TenantTx, now: Date, horizonEndHint: Date): Promise<LoadedInput> {
+export async function loadEngineInput(db: TenantDb | TenantTx, now: Date, horizonEndHint: Date): Promise<LoadedInput> {
   const tenant = await db.tenant.findFirstOrThrow({
     select: { timezone: true, scheduleHorizonDays: true, defaultCalendarId: true },
   });
@@ -165,6 +171,7 @@ async function loadEngineInput(db: TenantDb | TenantTx, now: Date, horizonEndHin
         createdAt: true,
         deliveryRisk: true,
         riskReason: true,
+        riskCause: true,
         plannedStartAt: true,
         plannedEndAt: true,
         scheduleDirty: true,
@@ -268,7 +275,7 @@ async function loadEngineInput(db: TenantDb | TenantTx, now: Date, horizonEndHin
 
   return {
     input: { orders, machines, calendars, downtime, materials, lockedEntries, inProgressEntries },
-    orders: orderRows.map((o) => ({ id: o.id, orderNumber: o.orderNumber, deliveryRisk: o.deliveryRisk, riskReason: o.riskReason, plannedStartAt: o.plannedStartAt, plannedEndAt: o.plannedEndAt, scheduleDirty: o.scheduleDirty })),
+    orders: orderRows.map((o) => ({ id: o.id, orderNumber: o.orderNumber, deliveryRisk: o.deliveryRisk, riskReason: o.riskReason, riskCause: o.riskCause, plannedStartAt: o.plannedStartAt, plannedEndAt: o.plannedEndAt, scheduleDirty: o.scheduleDirty })),
     machinesById,
     materialsById: new Map(materialRows.map((m) => [m.id, { code: m.code }])),
     tenant,
@@ -374,6 +381,20 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
         materialCode: c.materialId ? (loaded.materialsById.get(c.materialId)?.code ?? null) : null,
       }));
 
+      // docs/M3_SPEC.md §2: RiskCause per order — MATERIAL when this run recorded a shortage for it, UPSTREAM_DELAY
+      // when a fixed (locked/started) entry of this order is already running more than
+      // UPSTREAM_DELAY_THRESHOLD_MINUTES behind its own plannedStartAt, computed from data already loaded above
+      // (no new query): `result.conflicts` (this run's MATERIAL_SHORTAGE conflicts) and
+      // `loaded.input.lockedEntries`/`inProgressEntries` (the fixed entries).
+      const shortageOrderIds = new Set(result.conflicts.filter((c) => c.type === "MATERIAL_SHORTAGE" && c.orderId).map((c) => c.orderId!));
+      const upstreamDelayedOrderIds = new Set<string>();
+      const upstreamDelayMs = UPSTREAM_DELAY_THRESHOLD_MINUTES * 60_000;
+      for (const e of [...loaded.input.lockedEntries, ...loaded.input.inProgressEntries]) {
+        if (e.actualStartAt && e.actualStartAt.getTime() - e.plannedStartAt.getTime() > upstreamDelayMs) {
+          upstreamDelayedOrderIds.add(e.orderId);
+        }
+      }
+
       // 3. Orders: planned window, risk, scheduledAt, scheduleDirty = false (skipped when nothing changed).
       const changedRisks: RiskChange[] = [];
       for (const o of loaded.orders) {
@@ -382,10 +403,12 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
         const plannedStartAt = r.plannedStartAt ?? null;
         const plannedEndAt = r.plannedEndAt ?? null;
         const riskReason = r.riskReason ?? null;
+        const riskCause = riskCauseFor(r.deliveryRisk, shortageOrderIds.has(o.id), upstreamDelayedOrderIds.has(o.id));
         const same =
           !o.scheduleDirty &&
           o.deliveryRisk === r.deliveryRisk &&
           o.riskReason === riskReason &&
+          o.riskCause === riskCause &&
           (o.plannedStartAt?.getTime() ?? null) === (plannedStartAt?.getTime() ?? null) &&
           (o.plannedEndAt?.getTime() ?? null) === (plannedEndAt?.getTime() ?? null);
         if (o.deliveryRisk !== r.deliveryRisk) {
@@ -394,7 +417,7 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
         if (same) continue;
         await tx.order.update({
           where: { id: o.id },
-          data: { plannedStartAt, plannedEndAt, deliveryRisk: r.deliveryRisk, riskReason, scheduledAt: startedAt, scheduleDirty: false },
+          data: { plannedStartAt, plannedEndAt, deliveryRisk: r.deliveryRisk, riskReason, riskCause, scheduledAt: startedAt, scheduleDirty: false },
         });
       }
       // ON_HOLD orders are intentionally excluded from `loaded.orders`/the engine (their entries are frozen while
@@ -449,6 +472,37 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
           conflictCount: conflicts.length,
         }),
       );
+      // docs/M3_SPEC.md §7: ONE digest email per run (not per conflict) — folds the "new CRITICAL conflict" alert
+      // into this same email, listing the top conflicts already computed above. Same ADMIN+PLANNER recipients as
+      // the in-app notification just above.
+      {
+        const emailRecipients = await resolveEmailRecipients(tx, { roles: PLANNING_ROLES, excludeUserId: actorUserId });
+        if (emailRecipients.length > 0) {
+          const topConflicts = conflicts.slice(0, 5).map((c) => ({
+            title: conflictLineTitle(c.type, c.orderNumber ?? c.machineCode ?? c.materialCode ?? null),
+            message: c.message,
+          }));
+          const scheduleUrl = absoluteAppUrl("/schedule");
+          for (const recipient of emailRecipients) {
+            await sendEmail(tx, {
+              tenantId: session.tenant.id,
+              userId: recipient.id,
+              to: recipient.email,
+              subject: "Schedule updated",
+              template: "schedule-run-finished",
+              data: {
+                tenantName: session.tenant.name,
+                orderCount: result.stats.ordersScheduled,
+                conflictCount: conflicts.length,
+                conflicts: topConflicts,
+                scheduleUrl,
+              },
+              entityType: "ScheduleRun",
+              entityId: run.id,
+            });
+          }
+        }
+      }
       for (const c of conflicts) {
         if (c.severity !== "CRITICAL" && c.type !== "MATERIAL_SHORTAGE") continue;
         const subject: ConflictSubject | null = c.orderId
@@ -467,6 +521,23 @@ export async function runSchedule(db: TenantDb, session: Session, ctx: AuditCtx,
       for (const r of changedRisks) {
         const input = deliveryRiskChanged({ tenantId: session.tenant.id, actorUserId, orderId: r.orderId, orderNumber: r.orderNumber, risk: r.to });
         if (input) await notify(tx, input);
+        // docs/M3_SPEC.md §7: email only for risk ESCALATING to DELAYED/LATE (AT_RISK stays in-app only).
+        if (r.to === "DELAYED" || r.to === "LATE") {
+          const emailRecipients = await resolveEmailRecipients(tx, { roles: PLANNING_ROLES, excludeUserId: actorUserId });
+          const orderUrl = absoluteAppUrl(`/orders/${r.orderId}`);
+          for (const recipient of emailRecipients) {
+            await sendEmail(tx, {
+              tenantId: session.tenant.id,
+              userId: recipient.id,
+              to: recipient.email,
+              subject: `Order ${r.orderNumber} is ${r.to === "DELAYED" ? "delayed" : "late"}`,
+              template: "delivery-risk-escalated",
+              data: { tenantName: session.tenant.name, orderNumber: r.orderNumber, risk: r.to, orderUrl },
+              entityType: "Order",
+              entityId: r.orderId,
+            });
+          }
+        }
       }
 
       const event: ScheduleRunEvent = {

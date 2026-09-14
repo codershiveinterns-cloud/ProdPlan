@@ -67,7 +67,14 @@ export default async function DashboardPage() {
   const now = new Date();
   const today = todayInTz(tz, now);
 
-  const data = await loadDashboard(db, { today, now, includeSensitiveAudit: can(role, "audit:read-all") });
+  // The tile links to /schedule/optimize, which requires schedule:run — only query/show the count for roles that
+  // can actually open that page (docs/M3_SPEC.md §13 integration gap: ADMIN/PLANNER only, not SUPERVISOR/VIEWER).
+  const canRunOptimize = can(role, "schedule:run");
+
+  const [data, pendingSuggestions] = await Promise.all([
+    loadDashboard(db, { today, now, includeSensitiveAudit: can(role, "audit:read-all") }),
+    canRunOptimize ? db.optimizationSuggestion.count({ where: { status: "PENDING" } }) : Promise.resolve(undefined),
+  ]);
 
   const canCreateOrders = can(role, "orders:write");
   const canCreateMachines = can(role, "machines:write");
@@ -140,7 +147,7 @@ export default async function DashboardPage() {
         />
       ) : null}
 
-      <KpiTiles kpis={data.kpis} hrefs={data.hrefs} />
+      <KpiTiles kpis={data.kpis} hrefs={data.hrefs} pendingSuggestions={pendingSuggestions} />
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="flex min-w-0 flex-col gap-8">

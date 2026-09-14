@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Wrench } from "lucide-react";
 
 import { EmptyState } from "@/components/data/EmptyState";
+import { ExportButton } from "@/components/export/ExportButton";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { requirePagePermission } from "@/lib/auth/guards";
 import { todayInTz } from "@/lib/dates";
@@ -34,6 +35,7 @@ export default async function FloorPage({ searchParams }: { searchParams: Promis
   const today = todayInTz(tz);
   const role = session.user.role;
   const canAct = can(role, "operations:status");
+  const canExport = can(role, "exports:create");
 
   const [machines, workCenters, machineOptions] = await Promise.all([
     floorOperations(db, {
@@ -57,6 +59,7 @@ export default async function FloorPage({ searchParams }: { searchParams: Promis
       <PageHeader
         title="Floor"
         description="Today's and overdue operations by machine — start, pause, resume and complete."
+        actions={canExport ? <ExportButton kind="PRODUCTION_STATUS" filters={{ workCenterId, machineId }} /> : undefined}
       />
       <FloorFilters
         workCenters={workCenters}

@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Boxes,
   CalendarClock,
   CalendarRange,
@@ -38,6 +39,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Orders", href: "/orders", icon: ClipboardList, permission: "orders:read" },
       { label: "Schedule", href: "/schedule", icon: CalendarRange, permission: "schedule:read" },
       { label: "Floor", href: "/floor", icon: Wrench, permission: "schedule:read" },
+      { label: "Analytics", href: "/analytics", icon: BarChart3, permission: "analytics:read" },
     ],
   },
   {

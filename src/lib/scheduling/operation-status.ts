@@ -20,19 +20,20 @@
  * `reassessOrderRisk` notifies for AT_RISK/DELAYED/LATE (`deliveryRiskChanged`, builder returns null for ON_TRACK).
  * The acting user is always excluded from their own notifications.
  */
-import type { OperationStatus, OrderStatus, Role } from "@/generated/prisma/enums";
+import type { OperationStatus, OrderStatus, RiskCause, Role } from "@/generated/prisma/enums";
 import { audit, type AuditCtx } from "@/lib/audit";
 import type { Session } from "@/lib/auth/guards";
 import { isWorkingDay, type Calendar } from "@/lib/calendar";
 import { addDays, startOfDayInTz, toDateOnly, todayInTz } from "@/lib/dates";
 import type { TenantTx } from "@/lib/db";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
-import { deliveryRiskChanged, operationStatusChanged, orderStatusChanged } from "@/lib/notifications/events";
+import { deliveryRiskChanged, operationStatusChanged, orderStatusChanged, PLANNING_ROLES } from "@/lib/notifications/events";
 import { notify } from "@/lib/notifications/service";
+import { absoluteAppUrl, resolveEmailRecipients, sendEmail } from "@/lib/email/send";
 import { canTransition, completedAtFor, transitionSummary } from "@/lib/orders/status";
 import { can } from "@/lib/rbac";
 import { markScheduleDirty, resolveOrderConflicts } from "./dirty";
-import { classifyRisk } from "./risk";
+import { classifyRisk, UPSTREAM_DELAY_THRESHOLD_MINUTES } from "./risk";
 
 export const OPERATION_STATUSES = ["QUEUED", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "SKIPPED"] as const satisfies readonly OperationStatus[];
 
@@ -331,6 +332,23 @@ export async function applyOperationTransition(
       risk: risk.to,
     });
     if (riskInput) await notify(tx, riskInput);
+    // docs/M3_SPEC.md §7: email only for risk ESCALATING to DELAYED/LATE (AT_RISK stays in-app only).
+    if (risk.to === "DELAYED" || risk.to === "LATE") {
+      const emailRecipients = await resolveEmailRecipients(tx, { roles: PLANNING_ROLES, excludeUserId: session.user.id });
+      const orderUrl = absoluteAppUrl(`/orders/${entry.orderId}`);
+      for (const recipient of emailRecipients) {
+        await sendEmail(tx, {
+          tenantId: session.tenant.id,
+          userId: recipient.id,
+          to: recipient.email,
+          subject: `Order ${entry.order.orderNumber} is ${risk.to === "DELAYED" ? "delayed" : "late"}`,
+          template: "delivery-risk-escalated",
+          data: { tenantName: session.tenant.name, orderNumber: entry.order.orderNumber, risk: risk.to, orderUrl },
+          entityType: "Order",
+          entityId: entry.orderId,
+        });
+      }
+    }
   }
 
   return {
@@ -432,8 +450,18 @@ export async function reassessOrderRisk(tx: TenantTx, orderId: string, now: Date
         dueDate: true,
         deliveryRisk: true,
         riskReason: true,
+        riskCause: true,
         scheduleEntries: {
-          select: { status: true, plannedEndAt: true, actualEndAt: true, sequence: true, machine: { select: { code: true } } },
+          select: {
+            status: true,
+            plannedStartAt: true,
+            plannedEndAt: true,
+            actualStartAt: true,
+            actualEndAt: true,
+            sequence: true,
+            locked: true,
+            machine: { select: { code: true } },
+          },
         },
         scheduleConflicts: { where: { resolvedAt: null, type: "MATERIAL_SHORTAGE" }, select: { details: true }, take: 1 },
       },
@@ -447,6 +475,7 @@ export async function reassessOrderRisk(tx: TenantTx, orderId: string, now: Date
   const tz = tenant.timezone;
   let risk: RiskReassessment["to"] = "ON_TRACK";
   let reason: string | null = null;
+  let cause: RiskCause = "NONE";
 
   if (order.status !== "COMPLETED" && order.status !== "CANCELLED") {
     const steps = order.scheduleEntries.filter((s) => s.status !== "SKIPPED");
@@ -462,6 +491,11 @@ export async function reassessOrderRisk(tx: TenantTx, orderId: string, now: Date
         lastMachineCode = s.machine.code;
       }
     }
+    // docs/M3_SPEC.md §2: RiskCause's UPSTREAM_DELAY input — a fixed (locked/started) entry already running more
+    // than UPSTREAM_DELAY_THRESHOLD_MINUTES behind its own plannedStartAt, from the entries already loaded above.
+    const hasUpstreamDelay = order.scheduleEntries.some(
+      (s) => (s.locked || s.actualStartAt !== null) && s.actualStartAt !== null && s.actualStartAt.getTime() - s.plannedStartAt.getTime() > UPSTREAM_DELAY_THRESHOLD_MINUTES * 60_000,
+    );
     const shortageDetails = order.scheduleConflicts[0]?.details as { code?: string; shortBy?: number; unit?: string } | null | undefined;
     const calendar: Calendar | null = tenant.defaultCalendar
       ? {
@@ -483,14 +517,16 @@ export async function reassessOrderRisk(tx: TenantTx, orderId: string, now: Date
       horizonEnd: startOfDayInTz(addDays(todayInTz(tz, now), tenant.scheduleHorizonDays), tz),
       lastMachineCode,
       isWorkingDay: calendar && calendar.shifts.length > 0 ? (iso) => isWorkingDay(calendar, iso) : undefined,
+      hasUpstreamDelay,
     });
     risk = result.risk;
     reason = result.reason;
+    cause = result.cause;
   }
 
-  const changed = risk !== order.deliveryRisk || reason !== order.riskReason;
+  const changed = risk !== order.deliveryRisk || reason !== order.riskReason || cause !== order.riskCause;
   if (changed) {
-    await tx.order.update({ where: { id: orderId }, data: { deliveryRisk: risk, riskReason: reason } });
+    await tx.order.update({ where: { id: orderId }, data: { deliveryRisk: risk, riskReason: reason, riskCause: cause } });
   }
   return { orderId, orderNumber: order.orderNumber, from: order.deliveryRisk, to: risk, reason, changed };
 }

@@ -6,12 +6,13 @@
  */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight, Lightbulb } from "lucide-react";
 
 import { RunScheduleButton } from "./RunScheduleButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExportButton } from "@/components/export/ExportButton";
 
 export type ScheduleToolbarProps = {
   from: string;
@@ -25,6 +26,7 @@ export type ScheduleToolbarProps = {
   conflictCount: number;
   lastRunLabel: string;
   canRun: boolean;
+  canExport: boolean;
 };
 
 const DAY_OPTIONS = [7, 14, 30] as const;
@@ -49,6 +51,7 @@ export function ScheduleToolbar({
   conflictCount,
   lastRunLabel,
   canRun,
+  canExport,
 }: ScheduleToolbarProps) {
   const router = useRouter();
 
@@ -116,7 +119,16 @@ export function ScheduleToolbar({
               ) : null}
             </Link>
           </Button>
+          {canRun ? (
+            <Button variant="outline" asChild>
+              <Link href="/schedule/optimize">
+                <Lightbulb data-icon="inline-start" />
+                Suggestions
+              </Link>
+            </Button>
+          ) : null}
           {canRun ? <RunScheduleButton /> : null}
+          {canExport ? <ExportButton kind="SCHEDULE" filters={{ from, days: String(days), workCenterId }} /> : null}
         </div>
       </div>
     </div>

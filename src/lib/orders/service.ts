@@ -12,7 +12,8 @@ import { fromDateOnly, toDateOnly } from "@/lib/dates";
 import type { TenantDb, TenantTx } from "@/lib/db";
 import { DomainError, ForbiddenError, NotFoundError } from "@/lib/errors";
 import { notify } from "@/lib/notifications/service";
-import { orderStatusChanged } from "@/lib/notifications/events";
+import { orderStatusChanged, PLANNING_ROLES } from "@/lib/notifications/events";
+import { absoluteAppUrl, resolveEmailRecipients, sendEmail } from "@/lib/email/send";
 import { holdOrder, releaseOrder } from "@/lib/scheduling/operation-status";
 import { fieldIssue } from "@/lib/orders/issues";
 import { normalizeOrderNumber } from "@/lib/orders/numbers";
@@ -328,6 +329,23 @@ export async function changeOrderStatus(db: TenantDb, session: Session, change: 
         reason,
       }),
     );
+    // docs/M3_SPEC.md §7: email only for order status -> ON_HOLD / CANCELLED.
+    if (to === "ON_HOLD" || to === "CANCELLED") {
+      const emailRecipients = await resolveEmailRecipients(tx, { roles: PLANNING_ROLES, excludeUserId: session.user.id });
+      const orderUrl = absoluteAppUrl(`/orders/${after.id}`);
+      for (const recipient of emailRecipients) {
+        await sendEmail(tx, {
+          tenantId: session.tenant.id,
+          userId: recipient.id,
+          to: recipient.email,
+          subject: `Order ${after.orderNumber} is now ${to === "ON_HOLD" ? "on hold" : "cancelled"}`,
+          template: "order-status-changed",
+          data: { tenantName: session.tenant.name, orderNumber: after.orderNumber, status: to, reason: reason ?? null, actorName: session.user.name, orderUrl },
+          entityType: "Order",
+          entityId: after.id,
+        });
+      }
+    }
     return after;
   });
 }

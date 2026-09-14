@@ -302,3 +302,40 @@ export function operationStatusChanged(e: OperationStatusChangedEvent): Notifica
     excludeUserId: e.actorUserId ?? null,
   };
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Optimization (docs/M3_SPEC.md §3) — Engineer A's ONLY addition to this file.
+// ---------------------------------------------------------------------------------------------------------------
+
+export type OptimizationAppliedEvent = EventBase & {
+  suggestionId: string;
+  orderId: string;
+  orderNumber: string;
+  /** The suggestion's own summary, e.g. "Reassign SO-000042 op 20 to CNC-03". */
+  summary: string;
+};
+
+/** `optimization:<suggestionId>` — one notification per applied suggestion. */
+export function optimizationSuggestionDedupeKey(suggestionId: string): string {
+  return `optimization:${suggestionId}`;
+}
+
+/**
+ * A `PENDING` optimization suggestion was applied → ADMIN + PLANNER → /schedule/optimize, dedupe
+ * `optimization:<suggestionId>`. There is no dedicated `NotificationType` for optimization (docs/M3_SPEC.md §1
+ * added no new enum value) — `SCHEDULE_RUN` is reused since applying a suggestion always triggers a schedule run.
+ */
+export function optimizationApplied(e: OptimizationAppliedEvent): NotificationInput {
+  return {
+    tenantId: e.tenantId,
+    recipients: { roles: [...PLANNING_ROLES] },
+    type: "SCHEDULE_RUN",
+    title: "Optimization suggestion applied",
+    body: `${e.summary} (order ${e.orderNumber})`,
+    href: "/schedule/optimize",
+    entityType: "Order",
+    entityId: e.orderId,
+    dedupeKey: optimizationSuggestionDedupeKey(e.suggestionId),
+    excludeUserId: e.actorUserId ?? null,
+  };
+}
