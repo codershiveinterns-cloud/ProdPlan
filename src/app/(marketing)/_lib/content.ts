@@ -274,7 +274,26 @@ export const FOOTER = {
     { label: "Security", href: "#security" },
     { label: "FAQ", href: "#faq" },
     { label: "System status", href: "/api/health" },
-    { label: "Support", href: "mailto:support@prodplan.online" },
+    { label: "Support", href: "/support" },
   ],
   supportEmail: "support@prodplan.online",
 } as const;
+
+export const SUPPORT_TOPICS = [
+  {
+    title: "General questions",
+    copy: "Anything about how ProdPlan works, what a role can see, or whether it fits your plant.",
+  },
+  {
+    title: "Technical issue",
+    copy: "Something not loading, a number that looks wrong, or an error while using the app.",
+  },
+  {
+    title: "Account & access",
+    copy: "Adding a teammate, changing a role, or trouble signing in to your workspace.",
+  },
+  {
+    title: "Demo & onboarding",
+    copy: "Questions about the shared demo plant, or setting up your own workspace from scratch.",
+  },
+] as const;

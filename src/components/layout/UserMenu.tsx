@@ -70,10 +70,10 @@ export function UserMenu({ user, logoutAction }: { user: AppShellUser; logoutAct
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <a href="mailto:support@prodplan.online">
+            <Link href="/support">
               <LifeBuoy className="text-muted-foreground" aria-hidden="true" />
               Support
-            </a>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
