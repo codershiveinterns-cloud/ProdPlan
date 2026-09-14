@@ -72,7 +72,12 @@ export function SiteFooter({ signedIn, year }: { signedIn: boolean; year: number
 
         <div className="mt-12 flex flex-col gap-2 border-t border-white/10 pt-6 text-sm text-(--band-subtle) sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} ProdPlan. All rights reserved.</p>
-          <p>Production planning for discrete manufacturers.</p>
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>Production planning for discrete manufacturers.</span>
+            <a href={`mailto:${FOOTER.supportEmail}`} className={link}>
+              {FOOTER.supportEmail}
+            </a>
+          </p>
         </div>
       </Container>
     </footer>

@@ -274,5 +274,7 @@ export const FOOTER = {
     { label: "Security", href: "#security" },
     { label: "FAQ", href: "#faq" },
     { label: "System status", href: "/api/health" },
+    { label: "Support", href: "mailto:support@prodplan.online" },
   ],
+  supportEmail: "support@prodplan.online",
 } as const;

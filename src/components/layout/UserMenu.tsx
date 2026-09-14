@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { ChevronDown, LogOut, UserRound } from "lucide-react";
+import { ChevronDown, LifeBuoy, LogOut, UserRound } from "lucide-react";
 
 import { ROLE_LABELS } from "@/lib/rbac";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,12 @@ export function UserMenu({ user, logoutAction }: { user: AppShellUser; logoutAct
               <UserRound className="text-muted-foreground" aria-hidden="true" />
               Profile
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a href="mailto:support@prodplan.online">
+              <LifeBuoy className="text-muted-foreground" aria-hidden="true" />
+              Support
+            </a>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
