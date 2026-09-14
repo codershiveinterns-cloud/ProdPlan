@@ -122,6 +122,47 @@ enum ScheduleRunStatus {
   FAILED
 }
 
+/// docs/M3_SPEC.md §2: which of three buckets is driving an order's delivery risk — material dominates even when
+/// also upstream-delayed; CAPACITY is the default non-material, non-upstream cause (incl. unscheduled orders).
+enum RiskCause {
+  NONE
+  MATERIAL
+  CAPACITY
+  UPSTREAM_DELAY
+}
+
+/// docs/M3_SPEC.md §3: the two kinds of deterministic, explainable optimizer suggestion.
+enum SuggestionKind {
+  REASSIGN_MACHINE
+  REPRIORITIZE
+}
+
+enum SuggestionStatus {
+  PENDING
+  APPLIED
+  DISMISSED
+  STALE
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum ExportFormat {
+  CSV
+  PDF
+}
+
+enum ExportKind {
+  ORDERS
+  SCHEDULE
+  PRODUCTION_STATUS
+  AUDIT_LOG
+}
+
 // ---------- platform ----------
 
 model Tenant {
@@ -158,6 +199,9 @@ model Tenant {
   scheduleEntries    ScheduleEntry[]
   scheduleConflicts  ScheduleConflict[]
   notifications      Notification[]
+  optimizationSuggestions OptimizationSuggestion[]
+  emailMessages      EmailMessage[]
+  exportJobs         ExportJob[]
 }
 
 /// Login/signup rate limiting across serverless instances. Platform-level: no tenantId.
@@ -189,6 +233,10 @@ model User {
   createdImportBatches  ImportBatch[]    @relation("ImportBatchCreatedBy")
   auditEntries          AuditLog[]       @relation("AuditActor")
   notifications         Notification[]
+  appliedSuggestions    OptimizationSuggestion[] @relation("SuggestionAppliedBy")
+  dismissedSuggestions  OptimizationSuggestion[] @relation("SuggestionDismissedBy")
+  emailMessages         EmailMessage[]
+  exportJobs            ExportJob[]
 
   @@unique([tenantId, id])
   @@index([tenantId])
@@ -419,6 +467,8 @@ model Machine {
   operations ProductOperation[]
   scheduleEntries   ScheduleEntry[]
   scheduleConflicts ScheduleConflict[]
+  suggestionsFrom   OptimizationSuggestion[] @relation("SuggestionFromMachine")
+  suggestionsTo     OptimizationSuggestion[] @relation("SuggestionToMachine")
 
   @@unique([tenantId, id])
   @@unique([tenantId, code])
@@ -463,6 +513,7 @@ model Order {
   importBatchId     String?
   deliveryRisk      DeliveryRisk  @default(ON_TRACK)
   riskReason        String?
+  riskCause         RiskCause     @default(NONE)
   plannedStartAt    DateTime?
   plannedEndAt      DateTime?
   scheduledAt       DateTime?
@@ -478,6 +529,7 @@ model Order {
   createdBy   User         @relation("OrderCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   scheduleEntries   ScheduleEntry[]
   scheduleConflicts ScheduleConflict[]
+  optimizationSuggestions OptimizationSuggestion[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, orderNumber])
@@ -532,6 +584,7 @@ model ScheduleRun {
   tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   entries   ScheduleEntry[]
   conflicts ScheduleConflict[]
+  optimizationSuggestions OptimizationSuggestion[]
 
   @@index([tenantId, startedAt])
 }
@@ -571,6 +624,7 @@ model ScheduleEntry {
   machine    Machine           @relation(fields: [tenantId, machineId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
   run        ScheduleRun?      @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   conflicts  ScheduleConflict[]
+  optimizationSuggestions OptimizationSuggestion[]
 
   @@unique([tenantId, id])
   @@unique([tenantId, orderId, sequence])
@@ -620,9 +674,99 @@ model Notification {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [tenantId, userId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  emailMessages EmailMessage[]
 
   @@index([tenantId, userId, readAt, createdAt])
   @@index([tenantId, dedupeKey])
+}
+
+// ---------- optimization / email / export (Milestone 3) ----------
+
+/// docs/M3_SPEC.md §3: a deterministic, explainable optimizer suggestion — read-only until a planner applies it.
+model OptimizationSuggestion {
+  id                    String            @id @default(cuid())
+  tenantId              String
+  runId                 String?
+  kind                  SuggestionKind
+  status                SuggestionStatus  @default(PENDING)
+  orderId               String
+  entryId               String?
+  fromMachineId         String?
+  toMachineId           String?
+  fromPriority          OrderPriority?
+  toPriority            OrderPriority?
+  currentConflicts      Int
+  projectedConflicts    Int
+  currentLateMinutes    Int
+  projectedLateMinutes  Int
+  summary               String
+  rationale             String
+  appliedById           String?
+  appliedAt             DateTime?
+  dismissedById         String?
+  dismissedAt           DateTime?
+  createdAt             DateTime          @default(now())
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  run         ScheduleRun?  @relation(fields: [runId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  order       Order         @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Cascade, onUpdate: NoAction)
+  entry       ScheduleEntry? @relation(fields: [entryId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  fromMachine Machine?      @relation("SuggestionFromMachine", fields: [fromMachineId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  toMachine   Machine?      @relation("SuggestionToMachine", fields: [toMachineId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  appliedBy   User?         @relation("SuggestionAppliedBy", fields: [appliedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  dismissedBy User?         @relation("SuggestionDismissedBy", fields: [dismissedById], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status, createdAt])
+  @@index([tenantId, orderId])
+}
+
+/// docs/M3_SPEC.md §7: one row per attempted send (log-provider or Resend), never throws — a failed send is
+/// recorded, not raised, so it can never break the transaction that triggered it.
+model EmailMessage {
+  id             String      @id @default(cuid())
+  tenantId       String
+  userId         String?
+  toEmail        String
+  subject        String
+  template       String
+  status         EmailStatus @default(QUEUED)
+  providerId     String?
+  error          String?
+  notificationId String?
+  entityType     String?
+  entityId       String?
+  sentAt         DateTime?
+  createdAt      DateTime    @default(now())
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  notification Notification? @relation(fields: [notificationId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status, createdAt])
+}
+
+/// docs/M3_SPEC.md §8: an audit trail of what was exported and by whom. The generated file is streamed at request
+/// time and never stored — this row is metadata only, no file-storage dependency.
+model ExportJob {
+  id            String       @id @default(cuid())
+  tenantId      String
+  requestedById String
+  kind          ExportKind
+  format        ExportFormat
+  filters       Json?
+  fileName      String
+  rowCount      Int?
+  status        String       @default("READY")
+  error         String?
+  createdAt     DateTime     @default(now())
+
+  tenant      Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestedBy User   @relation(fields: [requestedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, createdAt])
 }
 
 // ---------- audit ----------

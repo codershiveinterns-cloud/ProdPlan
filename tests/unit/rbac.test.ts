@@ -32,6 +32,9 @@ const SPEC_TABLE: Record<Permission, Record<Role, boolean>> = {
   "schedule:move": { ADMIN: true, PLANNER: true, SUPERVISOR: false, VIEWER: false },
   "operations:status": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: false },
   "notifications:read": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: true },
+  // docs/M3_SPEC.md §5, §8
+  "analytics:read": { ADMIN: true, PLANNER: true, SUPERVISOR: false, VIEWER: false },
+  "exports:create": { ADMIN: true, PLANNER: true, SUPERVISOR: true, VIEWER: false },
 };
 
 describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
@@ -75,6 +78,8 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "schedule:move",
           "operations:status",
           "notifications:read",
+          "analytics:read",
+          "exports:create",
         ],
         "PLANNER": [
           "dashboard:read",
@@ -99,6 +104,8 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "schedule:move",
           "operations:status",
           "notifications:read",
+          "analytics:read",
+          "exports:create",
         ],
         "SUPERVISOR": [
           "dashboard:read",
@@ -114,6 +121,7 @@ describe("RBAC matrix (docs/M1_SPEC.md §3)", () => {
           "schedule:read",
           "operations:status",
           "notifications:read",
+          "exports:create",
         ],
         "VIEWER": [
           "dashboard:read",

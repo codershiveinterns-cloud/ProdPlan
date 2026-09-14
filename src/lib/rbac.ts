@@ -31,6 +31,8 @@ export const PERMISSIONS = [
   "schedule:move",
   "operations:status",
   "notifications:read",
+  "analytics:read",
+  "exports:create",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -64,8 +66,17 @@ const MATRIX: Record<Role, ReadonlySet<Permission>> = {
     "schedule:run",
     "schedule:move",
     "operations:status",
+    "analytics:read",
+    "exports:create",
   ]),
-  SUPERVISOR: new Set<Permission>([...READ_ALL, "orders:status", "stock:move", "downtime:write", "operations:status"]),
+  SUPERVISOR: new Set<Permission>([
+    ...READ_ALL,
+    "orders:status",
+    "stock:move",
+    "downtime:write",
+    "operations:status",
+    "exports:create",
+  ]),
   VIEWER: new Set<Permission>(READ_ALL),
 };
 

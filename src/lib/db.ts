@@ -110,6 +110,9 @@ export const TENANT_SCOPED_MODELS: ReadonlySet<Prisma.ModelName> = new Set<Prism
   "ScheduleEntry",
   "ScheduleConflict",
   "Notification",
+  "OptimizationSuggestion",
+  "EmailMessage",
+  "ExportJob",
 ]);
 
 /** Models WITHOUT a tenantId column. `Tenant` is handled by name below; anything else is denied through tenantDb(). */
@@ -127,6 +130,7 @@ export const JSON_FIELDS: Readonly<Record<string, readonly string[]>> = {
   AuditLog: ["before", "after"],
   ScheduleRun: ["summary"],
   ScheduleConflict: ["details"],
+  ExportJob: ["filters"],
 };
 const JSON_FIELD_NAMES: ReadonlySet<string> = new Set(Object.values(JSON_FIELDS).flat());
 
