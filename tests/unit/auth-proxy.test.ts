@@ -38,6 +38,17 @@ describe("src/proxy.ts (docs/M1_SPEC.md §3)", () => {
     expect(res.headers.get("x-middleware-request-x-pp-pathname")).toBe("/");
   });
 
+  it("lets anonymous and signed-in requests reach /support (marketing route) without a redirect", async () => {
+    const anon = await proxy(request("/support"));
+    expect(anon.status).toBe(200);
+    expect(anon.headers.get("location")).toBeNull();
+
+    const token = await tokenFor("VIEWER");
+    const signedIn = await proxy(request("/support", token));
+    expect(signedIn.status).toBe(200);
+    expect(signedIn.headers.get("location")).toBeNull();
+  });
+
   it("lets anonymous users reach /login and /signup and records the path header", async () => {
     for (const path of ["/login", "/signup", "/login?reason=revoked"]) {
       const res = await proxy(request(path));

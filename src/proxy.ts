@@ -7,14 +7,15 @@
  * (b) a verifying cookie on /login or /signup → /dashboard
  * (c) /logout, /api/**, /opengraph-image, /twitter-image, /_next/** and static assets pass untouched (matcher + explicit allow-list)
  * (d) /settings/users and /settings/tenant require the JWT role hint to be ADMIN
- * (e) "/" (the landing page) passes through for everyone; the (marketing) page shows "Open dashboard" to signed-in users
+ * (e) "/" and other (marketing) routes (e.g. /support) pass through for everyone; the (marketing) layout shows
+ *     "Open dashboard" instead of "Sign in" to signed-in users
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { sessionCookieName, sessionCookieOptions, verifySessionToken } from "@/lib/auth/jwt";
 
 const PUBLIC_PATHS = new Set(["/login", "/signup"]);
-/** Reachable with or without a session; the page itself decides what to show. */
-const LANDING_PATHS = new Set(["/"]);
+/** Reachable with or without a session; the page itself decides what to show. Every route in `(marketing)`. */
+const LANDING_PATHS = new Set(["/", "/support"]);
 /**
  * Reachable with or without a session. `/opengraph-image` / `/twitter-image` are code-generated metadata routes
  * (no file extension, so the matcher does not exclude them) that crawlers and social scrapers fetch anonymously.
